@@ -176,7 +176,7 @@ function defineRateLimiter({
  * Rate limiter for post email notifications
  *
  * Limit: 10 emails per hour
- * Prevents overwhelming Resend API and ensures controlled delivery
+ * Prevents overwhelming the email service and ensures controlled delivery
  */
 export const postCreationRateLimiter = defineRateLimiter({
   prefix: "post-creation",

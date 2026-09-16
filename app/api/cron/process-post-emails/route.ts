@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { render } from "react-email";
 import { prisma } from "@/lib/db";
 import { PostEmailQueueService } from "@/services/post-email-queue";
 import InitiativePostNotificationEmail from "@/emails/InitiativePostNotificationEmail";
-import emailConfig from "@/lib/email";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import emailConfig, { sendMailBatch } from "@/lib/email";
 
 /**
  * Post Email Queue Processor (Cron Worker)
@@ -14,15 +11,13 @@ const resend = new Resend(process.env.RESEND_API_KEY);
  * Runs daily, triggered by the scheduler, to process queued post email notifications.
  *
  * Flow:
- * 1. Fetch batch of queued emails (respecting Resend batch limits)
+ * 1. Fetch batch of queued emails
  * 2. Group by post/initiative and fetch post details
- * 3. Send emails using resend.batch.send
+ * 3. Send emails using sendMailBatch
  * 4. Delete successfully sent queue entries
  * 5. Failed entries remain for retry on next run
  */
 
-// Resend batch limit is 100 emails per call
-// We'll use 50 to stay safe and allow for rate limiting
 const BATCH_SIZE = 50;
 
 interface PostDetails {
@@ -99,7 +94,7 @@ export async function GET(request: NextRequest) {
       posts.map((p) => [p.id, p as PostDetails]),
     );
 
-    // Prepare batch emails with rate limiting
+    // Prepare emails to send
     const emailsToSend: Array<{
       from: string;
       to: string;
@@ -155,23 +150,22 @@ export async function GET(request: NextRequest) {
     // Send emails in batch
     if (emailsToSend.length > 0) {
       try {
-        const batchResponse = await resend.batch.send(
-          emailsToSend.map(({ queueId, ...email }) => ({
-            ...email,
-            tags: [
-              { name: "category", value: "post-notification" },
-              { name: "queue-id", value: queueId },
-            ],
-          })),
+        const results = await sendMailBatch(
+          emailsToSend.map(({ queueId, ...email }) => email),
         );
 
-        if (batchResponse.error) {
-          console.error("Resend batch send error:", batchResponse.error);
-          failed += emailsToSend.length;
-        } else {
-          // Delete successfully sent queue entries
+        const batchFailed = results.filter((r) => "error" in r).length;
+
+        if (batchFailed > 0) {
+          console.error(`${batchFailed} emails failed to send`);
+          failed += batchFailed;
+        }
+
+        // Delete successfully sent queue entries
+        const batchSuccess = emailsToSend.length - batchFailed;
+        if (batchSuccess > 0) {
           await PostEmailQueueService.deleteQueueEntries(processedQueueIds);
-          processed = emailsToSend.length;
+          processed = batchSuccess;
           console.log(`Successfully sent ${processed} emails`);
         }
       } catch (error) {

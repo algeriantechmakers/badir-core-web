@@ -1,15 +1,13 @@
 import { PrismaClient } from "@prisma/client";
-import { Resend } from "resend";
 import { render } from "react-email";
 import ConsentRequestEmail from "../emails/ConsentRequestEmail";
 import { SIGNUP_CONSENT_VERSION } from "../lib/signup-consent-config";
-import emailConfig from "../lib/email";
+import emailConfig, { sendMailBatch } from "../lib/email";
 
 const prisma = new PrismaClient();
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const CONSENT_PAGE_URL = "https://badir.space/consent";
-const BATCH_SIZE = 80; // resend batch limit is 100
+const BATCH_SIZE = 80;
 
 async function main() {
   const users = await prisma.user.findMany({
@@ -62,29 +60,18 @@ async function main() {
       })),
     );
 
-    const { data, error } = await resend.batch.send(
-      batch.map((email) => {
-        return {
-          ...email,
-          tags: [{ name: "category", value: "consent-request" }],
-        };
-      }),
-    );
+    const results = await sendMailBatch(batch);
 
-    if (error) {
-      console.error(`Batch ${i + 1} failed entirely:`, error);
-      failed += batchUsers.length;
-    } else {
-      data.data?.forEach((result, index) => {
-        if (result.id) {
-          sent++;
-        } else {
-          failed++;
-          console.error(`Failed to send to ${batchUsers[index].email}`);
-        }
-      });
-      console.log(`Batch ${i + 1} done.`);
+    for (const r of results) {
+      if ("error" in r) {
+        failed++;
+        console.error(`Failed to send to ${r.to}:`, r.error);
+      } else {
+        sent++;
+      }
     }
+
+    console.log(`Batch ${i + 1} done.`);
 
     if (i + 1 < numberBatches) {
       await new Promise((r) => setTimeout(r, 1000));

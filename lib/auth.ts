@@ -3,12 +3,11 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/db";
 import { nextCookies } from "better-auth/next-js";
 import PasswordResetEmail from "@/emails/PasswordResetEmail";
-import { Resend } from "resend";
+import { sendMail } from "@/lib/email";
+import emailConfig from "@/lib/email";
 import { render } from "react-email";
 import { runAfterResponse } from "@/lib/background";
 import { createAuthMiddleware } from "better-auth/api";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const PASSWORD_RESET_EXPIRY_MINUTES = 15;
 
@@ -67,21 +66,11 @@ export const auth = betterAuth({
       );
       const sendEmail = async () => {
         try {
-          await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL!,
+          await sendMail({
+            from: emailConfig.fromEmail,
             to: user.email,
             subject: "إعادة تعيين كلمة المرور - منصة بادر",
             html: emailHtml,
-            headers: {
-              "X-Entity-Ref-ID": `badir-password-reset-${Date.now()}`,
-            },
-            tags: [
-              { name: "category", value: "password-reset" },
-              {
-                name: "environment",
-                value: process.env.NODE_ENV || "development",
-              },
-            ],
           });
         } catch (error) {
           console.error("Failed to send password reset email:", error);

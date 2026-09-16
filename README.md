@@ -481,7 +481,7 @@ To promote a user to admin role, run: `npm run admin:promote` and follow the pro
 
 Badir uses two separate email services, each optimized for its specific purpose:
 
-### Transactional Emails (Resend)
+### Transactional Emails (SMTP)
 
 **Purpose**: Time-sensitive, user-triggered emails requiring high deliverability
 
@@ -495,12 +495,16 @@ Badir uses two separate email services, each optimized for its specific purpose:
 **Configuration**:
 
 ```bash
-RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=noreply@yourdomain.com
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+SMTP_FROM_EMAIL=noreply@yourdomain.com
 CONTACT_EMAIL=contact@yourdomain.com
 ```
 
-**Implementation**: Uses [Resend](https://resend.com) with `react-email` templates for type-safe, responsive emails.
+**Implementation**: Uses `nodemailer` with `react-email` templates for type-safe, responsive emails.
 
 ### Newsletter Emails (MailerLite)
 
