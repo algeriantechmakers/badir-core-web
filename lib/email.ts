@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import emailConfig from "./email-config";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -9,11 +10,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.SMTP_PASS,
   },
 });
-
-const emailConfig = {
-  contactEmail: process.env.CONTACT_EMAIL || "help.badir@gmail.com",
-  fromEmail: process.env.SMTP_FROM_EMAIL || "noreply@updates.badir.space",
-};
 
 export async function sendMail(options: {
   from: string;
