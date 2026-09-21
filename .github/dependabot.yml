@@ -1,0 +1,170 @@
+version: 2
+
+# Two bugs fixed up front so they don't fail CI the first time Dependabot fires:
+#
+#   1. `prefix: "chore(ci)"` (or any parenthesised prefix) + `include: "scope"`
+#      produces `chore(ci)(deps): bump …` — Conventional Commits allows exactly
+#      one scope, so commitlint rejects the header. Same defect would hit the
+#      docker / docker-compose ecosystems. Fix: use the parenthesised prefix
+#      WITHOUT `include: "scope"`, so Dependabot emits `chore(ci): bump …`.
+#      For the npm ecosystem we keep `include: "scope"` (and the plain
+#      `chore` prefix) so production and dev bumps stay distinguishable as
+#      `chore(deps):` / `chore(deps-dev):`.
+#
+#   2. `body-max-line-length: [2, "always", 100]` rejects Dependabot's commit
+#      body (which embeds upstream release notes / changelog excerpts /
+#      compatibility tables whose lines routinely exceed 100 chars and cannot
+#      be reflowed). Fixed in commitlint.config.cjs (Phase 4) by disabling
+#      body-max-line-length and footer-max-line-length.
+updates:
+  # ────────────────────────────────────────────────────────────────────────────
+  # npm — package.json + pnpm-lock.yaml
+  # ────────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+    versioning-strategy: "increase"
+    labels:
+      - "dependencies"
+      - "npm"
+    commit-message:
+      # Plain "chore" prefix + include: "scope" → `chore(deps):` /
+      # `chore(deps-dev):`, the conventional idiom and what distinguishes
+      # prod from dev bumps. (Bug 1 fix: don't add parentheses here.)
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    groups:
+      next:
+        patterns:
+          - "next"
+          - "eslint-config-next"
+          - "@next/*"
+      # react/react-dom are pinned exactly (19.1.1). Grouping them keeps the
+      # pair in lockstep if the pin is ever loosened. Other react-* packages
+      # (react-day-picker, react-pdf, …) intentionally fall through to the
+      # catch-all so they version independently.
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react*"
+      tiptap:
+        patterns:
+          - "@tiptap/*"
+          - "reactjs-tiptap-editor"
+      prisma:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@typescript-eslint/*"
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "prettier-plugin-tailwindcss"
+          - "tw-animate-css"
+      aws-sdk:
+        patterns:
+          - "@aws-sdk/*"
+      types:
+        patterns:
+          - "@types/*"
+      production-dependencies:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      development-dependencies:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # docker — Dockerfile FROM references
+  # ────────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      # Parenthesised prefix WITHOUT include → `chore(docker): bump …`. (Bug 1 fix.)
+      prefix: "chore(docker)"
+    # Major bumps (node 22 → 24, postgres 18 → 19, …) deserve a human eye:
+    # they may need a code change, a Prisma engine rebuild, or a base-image
+    # security review that a weekly bot PR doesn't carry.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # docker-compose — service image references
+  # ────────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker-compose"
+    commit-message:
+      # Parenthesised prefix WITHOUT include → `chore(compose): bump …`. (Bug 1 fix.)
+      prefix: "chore(compose)"
+    # Same reasoning as the docker ecosystem: postgres/minio/ofelia major
+    # bumps need operator attention (volume formats, env-var names, healthcheck
+    # semantics), not an automatic weekly PR.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # github-actions — pinned SHAs in .github/workflows/*
+  # ────────────────────────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      # Parenthesised prefix WITHOUT include → `chore(ci): bump …`. (Bug 1 fix.)
+      prefix: "chore(ci)"
+    # Major version bumps on action SHAs (v6 → v7, v4 → v5) routinely change
+    # node-version requirements, breaking-change defaults, or inputs the rest
+    # of the workflow relies on. Reserve those for a deliberate PR.
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"

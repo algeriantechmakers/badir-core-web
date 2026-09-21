@@ -12,7 +12,13 @@ const TRUSTED_DOCUMENT_HOSTS = [
   "app.box.com",
 ];
 
-const LEGACY_STORAGE_HOST_KEYWORDS = ["supabase"];
+// Object-storage hosts whose URLs are trusted for document previews.
+// "supabase" is retained because rows predating the S3 migration still point there.
+const LEGACY_STORAGE_HOST_KEYWORDS = [
+  "supabase",
+  "r2.dev",
+  "r2.cloudflarestorage.com",
+];
 
 export function isTrustedDocumentPreviewUrl(value: string) {
   try {

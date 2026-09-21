@@ -57,7 +57,7 @@ export const TelInput = forwardRef<HTMLInputElement, FormInputProps>(
         />
         <Select
           value={selectedCountry?.code}
-          onValueChange={(value) => onCountryChange?.(value)}
+          onValueChange={(value) => value && onCountryChange?.(value)}
           disabled={disabled}
         >
           <SelectTrigger

@@ -9,8 +9,17 @@ import {
   TargetAudience,
 } from "@prisma/client";
 import { ArrowUpLeft } from "lucide-react";
+import { unstable_cache } from "next/cache";
 import React from "react";
 import InitiativeCard from "../InitiativeCard";
+
+export const dynamic = "force-dynamic";
+
+const getLatestInitiatives = unstable_cache(
+  () => InitiativeService.getMany({}, { page: 1, limit: 3 }),
+  ["landing:last-initiatives"],
+  { revalidate: 1800, tags: ["initiatives"] },
+);
 
 // fallback initiatives when database is empty
 function generateFallbackInitiatives(count: number): InitiativeCardType[] {
@@ -95,10 +104,7 @@ function generateFallbackInitiatives(count: number): InitiativeCardType[] {
 }
 
 export default async function LastInitiatives() {
-  const initialInitiatives = await InitiativeService.getMany(
-    {},
-    { page: 1, limit: 3 },
-  );
+  const initialInitiatives = await getLatestInitiatives();
 
   let threeInitiatives = initialInitiatives.data;
 

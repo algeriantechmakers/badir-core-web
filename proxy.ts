@@ -35,6 +35,8 @@ export default async function proxy(request: NextRequest) {
       forMiddleware.api.organizationPrefix,
       forMiddleware.api.initiativePrefix,
       forMiddleware.api.participantPrefix,
+      forMiddleware.api.healthPrefix,
+      forMiddleware.api.cronPrefix,
     ].join("|")})`,
   ).test(pathname);
 

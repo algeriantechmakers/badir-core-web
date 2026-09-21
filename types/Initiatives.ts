@@ -18,7 +18,7 @@ export interface InitiativeCard extends Pick<
 > {
   category: Pick<
     InitiativeCategory,
-    "nameAr" | "nameEn" | "icon" | "bgColor" | "textColor"
+    "nameAr" | "nameEn" | "bgColor" | "textColor"
   >;
   organizer: {
     type: OrganizerType;

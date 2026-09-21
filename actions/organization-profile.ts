@@ -12,10 +12,7 @@ import {
 } from "@/schemas/signupOrgSchema";
 import { AUTHORIZED_REDIRECTION } from "@/data/routes";
 import { OrganizationStatus, UserType } from "@prisma/client";
-import {
-  StorageHelpers,
-  extractStoragePath,
-} from "@/services/supabase-storage";
+import { StorageHelpers, extractStoragePath } from "@/services/storage";
 import { ActionResponse, BUCKETS } from "@/types/Statics";
 import { OrganizationService } from "@/services/organizations";
 import { getCallingCodeFromCountry, mimeTypeToExtension } from "@/lib/utils";

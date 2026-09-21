@@ -86,7 +86,7 @@ export async function submitRating(formData: PlatformRatingFormData): Promise<{
     if (isCritical) {
       try {
         await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || process.env.BETTER_AUTH_URL || "http://localhost:3000"}/api/send-email`,
+          `${process.env.APP_URL || process.env.BETTER_AUTH_URL || "http://localhost:3000"}/api/send-email`,
           {
             method: "POST",
             headers: {

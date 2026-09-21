@@ -5,10 +5,7 @@ import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { NewInitiativeFormData } from "@/schemas/newInitiativeSchema";
-import {
-  extractStoragePath,
-  StorageHelpers,
-} from "@/services/supabase-storage";
+import { extractStoragePath, StorageHelpers } from "@/services/storage";
 import { v4 as uuidv4 } from "uuid";
 import path from "path";
 import { mimeTypeToExtension } from "@/lib/utils";

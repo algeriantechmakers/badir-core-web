@@ -1,12 +1,9 @@
-import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 import PostNotificationEmail from "@/emails/PostNotificationEmail";
 import FeedbackReceivedEmail from "@/emails/FeedbackReceivedEmail";
 import ContactMessageEmail from "@/emails/ContactMessageEmail";
-import emailConfig from "@/lib/email";
+import emailConfig, { sendMail } from "@/lib/email";
 import { render } from "react-email";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ? password-reset is excluded from here as it's handled directly in lib/auth.ts to wait for the background email to be sent before terminating the function
 type EmailType = "post-notification" | "feedback" | "contact";
@@ -71,20 +68,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.RESEND_API_KEY) {
-      console.error("RESEND_API_KEY is not configured");
+    if (!process.env.SMTP_HOST) {
+      console.error("SMTP_HOST is not configured");
       return NextResponse.json(
         { error: "Email service is not configured" },
         { status: 500 },
       );
     }
 
-    let emailResponse;
     const fromEmail = emailConfig.fromEmail;
-
-    const commonHeaders = {
-      "X-Entity-Ref-ID": `badir-${Date.now()}`,
-    };
 
     switch (body.type) {
       case "post-notification": {
@@ -101,21 +93,21 @@ export async function POST(request: NextRequest) {
           }),
         );
 
-        emailResponse = await resend.emails.send({
+        const info = await sendMail({
           from: `منصة بادر <${fromEmail}>`,
           to: body.to,
           subject: `منشور جديد: ${postTitle}`,
           html: emailHtml,
-          headers: commonHeaders,
-          tags: [
-            { name: "category", value: "post-notification" },
-            {
-              name: "environment",
-              value: process.env.NODE_ENV || "development",
-            },
-          ],
         });
-        break;
+
+        return NextResponse.json(
+          {
+            success: true,
+            messageId: info.messageId,
+            message: "Email sent successfully",
+          },
+          { status: 200 },
+        );
       }
 
       case "feedback": {
@@ -123,18 +115,21 @@ export async function POST(request: NextRequest) {
 
         const emailHtml = await render(FeedbackReceivedEmail(feedbackData));
 
-        emailResponse = await resend.emails.send({
+        const info = await sendMail({
           from: `منصة بادر <${fromEmail}>`,
           to: body.to,
           subject: "تقييم حرج للمنصة - يتطلب متابعة فورية",
           html: emailHtml,
-          headers: commonHeaders,
-          tags: [
-            { name: "category", value: "feedback" },
-            { name: "priority", value: "critical" },
-          ],
         });
-        break;
+
+        return NextResponse.json(
+          {
+            success: true,
+            messageId: info.messageId,
+            message: "Email sent successfully",
+          },
+          { status: 200 },
+        );
       }
 
       case "contact": {
@@ -152,19 +147,22 @@ export async function POST(request: NextRequest) {
           }),
         );
 
-        emailResponse = await resend.emails.send({
+        const info = await sendMail({
           from: `منصة بادر <${fromEmail}>`,
           to: body.to,
           subject: `رسالة تواصل جديدة: ${title}`,
           replyTo: email,
           html: emailHtml,
-          headers: commonHeaders,
-          tags: [
-            { name: "category", value: "contact" },
-            { name: "inquiry-type", value: inquiryType },
-          ],
         });
-        break;
+
+        return NextResponse.json(
+          {
+            success: true,
+            messageId: info.messageId,
+            message: "Email sent successfully",
+          },
+          { status: 200 },
+        );
       }
 
       default:
@@ -173,23 +171,6 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
     }
-
-    if (emailResponse.error) {
-      console.error("Resend API error:", emailResponse.error);
-      return NextResponse.json(
-        { error: "Failed to send email" },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: true,
-        messageId: emailResponse.data?.id,
-        message: "Email sent successfully",
-      },
-      { status: 200 },
-    );
   } catch (error) {
     console.error("Error sending email:", error);
     return NextResponse.json(

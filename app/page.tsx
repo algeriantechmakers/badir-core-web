@@ -7,6 +7,8 @@ import Stats from "@/components/pages/landing/Stats";
 import Testimonials from "@/components/pages/landing/Testimonials";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 export default function Home() {
   return (
     <>

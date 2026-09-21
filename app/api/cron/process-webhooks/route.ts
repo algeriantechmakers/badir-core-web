@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 /**
  * Webhook Event Processor (Cron Worker)
  *
- * Runs daily at 8 AM via Vercel Cron (Hobby plan).
+ * Runs daily at 8 AM, triggered by the scheduler (see docker-compose).
  * Processes queued webhook events from the database.
  *
  * Flow:
@@ -26,7 +26,7 @@ const BATCH_SIZE = 40;
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
 
-  // Verify Vercel Cron secret
+  // Verify the scheduler's shared secret
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -206,7 +206,6 @@ async function handleUpdate(
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// Since we are usign Hobby plan of Vercel, we have up to 10 seconds per execution. For that I reduced batch size to 40.
-// But still, on the table in https://vercel.com/docs/functions/configuring-functions/duration?framework=nextjs-app#duration-limits is says max is 60s for disabled Fluide compute.
+// Batch size is capped at 40 to keep a single execution comfortably short.
 // I am keeping batch size to 40 for now to be safe.
 export const maxDuration = 60;

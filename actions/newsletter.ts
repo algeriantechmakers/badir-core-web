@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { MailerLiteService } from "@/services/mailerlite";
 import { prisma } from "@/lib/db";
-import { waitUntil } from "@vercel/functions";
 import { newsletterSubscriptionRateLimiter } from "@/lib/rate-limit";
 
 interface ActionResult {
@@ -28,13 +27,9 @@ export async function subscribeToNewsletter(): Promise<ActionResult> {
 
     const userId = session.user.id;
 
-    const { success: rateLimitSuccess, pending } =
+    const { success: rateLimitSuccess } =
       await newsletterSubscriptionRateLimiter.limit(userId);
 
-    if (waitUntil !== undefined) {
-      // I added the condition to avoid error in dev
-      waitUntil(pending);
-    }
     if (!rateLimitSuccess) {
       return {
         success: false,
@@ -126,12 +121,9 @@ export async function unsubscribeFromNewsletter(): Promise<ActionResult> {
 
     const userId = session.user.id;
 
-    const { success: rateLimitSuccess, pending } =
+    const { success: rateLimitSuccess } =
       await newsletterSubscriptionRateLimiter.limit(userId);
 
-    if (waitUntil !== undefined) {
-      waitUntil(pending);
-    }
     if (!rateLimitSuccess) {
       return {
         success: false,

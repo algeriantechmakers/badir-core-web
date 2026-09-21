@@ -2,11 +2,20 @@ import { partners } from "@/data/statics";
 import PartnerMarquee from "./PartnerMarquee";
 import { OrganizationService } from "@/services/organizations";
 import { Partner } from "@/types/Statics";
+import { unstable_cache } from "next/cache";
+
+export const dynamic = "force-dynamic";
+
+const getFeaturedPartners = unstable_cache(
+  () => OrganizationService.getFeaturedPartners(),
+  ["landing:featured-partners"],
+  { revalidate: 1800, tags: ["organizations"] },
+);
 
 export default async function Partners() {
   let fivePartners: Partner[] = [];
 
-  const featuredOrgs = await OrganizationService.getFeaturedPartners();
+  const featuredOrgs = await getFeaturedPartners();
 
   const fetched =
     featuredOrgs.map((item) => {

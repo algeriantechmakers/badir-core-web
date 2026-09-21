@@ -1,0 +1,238 @@
+name: "🚀 CI & Delivery"
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+# Least privilege by default; each job elevates only the scopes it needs.
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Registry lives in one place so switching off GHCR later is a single edit.
+  REGISTRY: ghcr.io
+  # ghcr.io/algeriantechmakers/badir-core-web
+  IMAGE: ${{ github.repository }}
+
+jobs:
+  # ── Quality gate — must pass before anything is built or released ────────────
+  validation:
+    name: "🛡️ Quality Guard"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read # commitlint-github-action lists PR commits via the API
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit messages
+        if: github.event_name == 'pull_request'
+        uses: wagoid/commitlint-github-action@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # postinstall runs `prisma generate`, which needs the schema wired up; run it
+      # explicitly below instead so a plain install can't fail on ordering.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Generate Prisma client
+        run: pnpm exec prisma generate
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type-check
+        run: pnpm run type-check
+
+      - name: Build (Next.js)
+        env:
+          # Standalone build needs the env vars that would otherwise be read at runtime;
+          # the Dockerfile passes them in, but here we stub the minimum so `next build`
+          # can validate the codebase. Production values are baked into the image at
+          # container start (no env in the build — see Dockerfile).
+          RESEND_API_KEY: re_ci_dummy
+          BETTER_AUTH_SECRET: ci_only_dummy_secret_at_least_32_chars
+        run: pnpm run build
+
+  # ── PR preview image — build & push a pr-<n> tag ────────────────────────────
+  # Skipped for forks (GITHUB_TOKEN cannot push to the base repo's registry) and
+  # for dependabot PRs.
+  pr-image:
+    name: "🐳 PR Image"
+    needs: validation
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE }}
+          flavor: latest=false
+          tags: type=ref,event=pr
+
+      - name: Build and push (runner)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: runner
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          # No APP_VERSION: a PR build is deliberately unversioned, /api/health says "unknown".
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Sibling migrator image for the dedicated one-shot `migrate` service in
+      # badir-core-compose. Same `docker buildx` cache as the runner build (the
+      # `deps` stage is the only thing the migrator adds on top), so this second
+      # push is metadata + a thin layer — no second build, no second build minute.
+      - name: Build and push (migrator)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: migrator
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}-migrator
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── Release — semantic-release computes the next version from the commits ────
+  release:
+    name: "📦 Semantic Release"
+    needs: validation
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      published: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Semantic Release
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # @semantic-release/npm with npmPublish: false is already in .releaserc.json;
+          # @semantic-release/changelog + @semantic-release/git are the extras the action
+          # needs to install on top of what the repo declares.
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+
+  # ── Publish release image — tag with the version + latest ───────────────────
+  publish-image:
+    name: "🐳 Publish"
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE }}
+          tags: |
+            type=raw,value=${{ needs.release.outputs.version }}
+            type=raw,value=latest
+
+      - name: Build and push (runner)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: runner
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          # The version worn on the outside: /api/health reports the release the
+          # container is actually running. @semantic-release/npm also bumps
+          # package.json, so this build arg and the package version stay in lockstep.
+          build-args: |
+            APP_VERSION=${{ needs.release.outputs.version }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Sibling migrator image for the dedicated one-shot `migrate` service in
+      # badir-core-compose. Same `docker buildx` cache as the runner build; see
+      # the matching comment in the pr-image job for why this is metadata + a
+      # thin layer rather than a second full build.
+      - name: Build and push (migrator)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: migrator
+          platforms: linux/amd64
+          push: true
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}-migrator
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

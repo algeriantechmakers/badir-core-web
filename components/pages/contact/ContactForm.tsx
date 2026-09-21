@@ -12,7 +12,7 @@ import {
 import AppButton from "@/components/AppButton";
 import FormInput from "@/components/form-input";
 import { Loader2 } from "lucide-react";
-import emailConfig from "@/lib/email";
+import emailConfig from "@/lib/email-config";
 
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);

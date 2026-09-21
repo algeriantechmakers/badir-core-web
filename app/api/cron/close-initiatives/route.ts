@@ -4,14 +4,14 @@ import { InitiativeService } from "@/services/initiatives";
 /**
  * Close Ended Initiatives (Cron Worker)
  *
- * Runs daily via Vercel Cron. Marks any published initiative whose end date
+ * Runs daily, triggered by the scheduler. Marks any published initiative whose end date
  * has passed as `completed`, so it becomes read-only (no posting or editing)
  * while remaining visible and open for participant ratings.
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
 
-  // Verify Vercel Cron secret
+  // Verify the scheduler's shared secret
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

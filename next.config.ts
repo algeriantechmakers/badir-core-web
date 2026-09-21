@@ -1,6 +1,30 @@
 import type { NextConfig } from "next";
+const isDev = process.env.NODE_ENV === "development";
+/**
+ * Allows a deployment to serve objects from a custom CDN domain without editing
+ * this file: set S3_PUBLIC_URL at build time and its host joins the allowlist.
+ * Optional — the static patterns below already cover R2 and local MinIO.
+ */
+const extraImageHosts: NonNullable<NextConfig["images"]>["remotePatterns"] =
+  (() => {
+    const publicUrl = process.env.S3_PUBLIC_URL;
+    if (!publicUrl) return [];
+    try {
+      const { protocol, hostname, port } = new URL(publicUrl);
+      return [
+        {
+          protocol: protocol.replace(":", "") as "http" | "https",
+          hostname,
+          ...(port ? { port } : {}),
+        },
+      ];
+    } catch {
+      return [];
+    }
+  })();
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   experimental: {
     serverActions: {
       bodySizeLimit: "40mb",
@@ -16,13 +40,24 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    // domains: ["*.supabase.co"],
+    // Build-time allowlist of hosts next/image may optimise from. It is baked
+    // into the build, so it deliberately covers every environment at once —
+    // that keeps a single image promotable across dev1/staging1/prod.
+    dangerouslyAllowLocalIP: isDev,
     remotePatterns: [
+      // Rows written before the S3 migration still hold Supabase public URLs.
       {
         protocol: "https",
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/**",
       },
+      // Cloudflare R2: public dev buckets and the S3 API endpoint.
+      { protocol: "https", hostname: "*.r2.dev" },
+      { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
+      // Local MinIO.
+      { protocol: "http", hostname: "localhost", port: "9000" },
+      { protocol: "http", hostname: "minio", port: "9000" },
+      ...extraImageHosts,
     ],
     qualities: [60, 80, 100],
   },
@@ -55,9 +90,6 @@ const nextConfig: NextConfig = {
         ],
       },
     ];
-  },
-  typescript: {
-    ignoreBuildErrors: true,
   },
 };
 
