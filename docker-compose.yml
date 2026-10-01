@@ -1,0 +1,143 @@
+name: badir
+
+# =============================================================================
+# LOCAL DEVELOPMENT ONLY.
+#
+# This compose file runs the EXTERNAL SERVICES the Next.js app needs to talk to:
+# PostgreSQL, Redis, MinIO (S3-compatible object storage) and Mailpit.
+#
+# The application itself is NOT a service here — it is launched from your IDE
+# (`pnpm dev`, or the run config of your choice) so you keep HMR, breakpoints
+# and source maps. As a result:
+#
+#   * DATABASE_URL / S3_ENDPOINT / etc. in .env point at `localhost` (see
+#     .env.example), because both ends are on the host.
+#   * Schema migrations are applied on the host with `pnpm db:migrate`
+#     (or `pnpm db:reset-seed` for a wiped + seeded dev database).
+#   * Cron jobs (/api/cron/*) are triggered manually with curl + CRON_SECRET;
+#     the scheduler (ofelia) that runs them in production lives in the
+#     separate `badir-core-compose/` repo, not here.
+#
+# Production / staging / dev1 stacks live in `badir-core-compose/` and are
+# managed by Portainer — do not promote this file.
+# =============================================================================
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${DB_USER:-badir}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-badir}
+      POSTGRES_DB: ${DB_NAME:-badir}
+
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+
+    volumes:
+      - badir_pgdata:/var/lib/postgresql
+
+    healthcheck:
+      test:
+        ["CMD-SHELL", "pg_isready -U ${DB_USER:-badir} -d ${DB_NAME:-badir}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Rate-limiter counter store (lib/rate-limit.ts). No password locally — it is
+  # bound to loopback only. Deployed environments run their own Redis on the
+  # stack's internal network with `--requirepass`; see badir-core-compose.
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+
+    command: redis-server --save "" --appendonly no
+
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+
+    ports:
+      # Web UI — http://127.0.0.1:8025
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+      # SMTP — point SMTP_* in .env at this if/when the app sends via SMTP
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+
+    volumes:
+      - badir_mailpit:/data
+
+    environment:
+      MP_MAX_MESSAGES: "5000"
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Local object storage. Deployed environments use Cloudflare R2 — both speak
+  # the S3 API, so the app keeps one code path; only the S3_* values in .env
+  # change between local and deployed.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+
+    command: server /data --console-address ":9001"
+
+    ports:
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+
+    volumes:
+      - badir_minio:/data
+
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # One-shot bucket bootstrap so a fresh clone has somewhere to upload to.
+  # Exits 0 when done — `docker compose ps` showing "exited (0)" is success.
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+
+    depends_on:
+      minio:
+        condition: service_healthy
+
+    # Public read matches how the deployed bucket is served, so local object
+    # URLs work in the browser without signing them first.
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 '${MINIO_ROOT_USER:-minioadmin}' '${MINIO_ROOT_PASSWORD:-minioadmin}' &&
+      mc mb --ignore-existing local/${S3_BUCKET:-badir} &&
+      mc anonymous set download local/${S3_BUCKET:-badir}
+      "
+
+volumes:
+  badir_pgdata:
+  badir_mailpit:
+  badir_minio:

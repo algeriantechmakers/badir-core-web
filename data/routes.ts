@@ -64,6 +64,12 @@ const forMiddleware = {
     organizationPrefix: "/api/organizations",
     initiativePrefix: "/api/initiatives",
     participantPrefix: "/api/participants",
+    // Endpoints that must bypass the auth check entirely:
+    //   /api/health   — Docker HEALTHCHECK (liveness probe)
+    //   /api/cron/*   — Ofelia → app cron triggers (Bearer CRON_SECRET
+    //                   guards these inside the route, not in the proxy)
+    healthPrefix: "/api/health",
+    cronPrefix: "/api/cron",
   },
 };
 

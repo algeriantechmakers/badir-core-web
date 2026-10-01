@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { Resend } from "resend";
 import { render } from "react-email";
 import { subDays } from "date-fns";
-import emailConfig from "@/lib/email";
+import emailConfig, { sendMailBatch } from "@/lib/email";
 import InactivityWarningEmail from "@/emails/InactivityWarningEmail";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const BATCH_SIZE = 50;
 const WARNING_DAYS = 510;
 const DELETION_DAYS = 540;
@@ -104,20 +102,22 @@ export async function GET(request: NextRequest) {
               InactivityWarningEmail({
                 firstName: user.firstName,
                 daysRemaining: (DELETION_DAYS - WARNING_DAYS).toString(),
-                platformUrl: process.env.NEXT_PUBLIC_APP_URL!,
+                platformUrl: process.env.APP_URL!,
               }),
             ),
           })),
         );
 
-        const { data, error } = await resend.batch.send(emails);
+        const results = await sendMailBatch(emails);
 
-        if (error) {
-          console.error(`Warning batch ${i + 1} failed:`, error);
-          failed += batch.length;
-        } else {
-          warned += data?.length ?? 0;
+        const batchFailed = results.filter((r) => "error" in r).length;
+        const batchWarned = results.length - batchFailed;
+
+        if (batchFailed > 0) {
+          console.error(`Warning batch ${i + 1} had ${batchFailed} failures`);
+          failed += batchFailed;
         }
+        warned += batchWarned;
 
         if (i + 1 < numberBatches) {
           await new Promise((r) => setTimeout(r, 1000));

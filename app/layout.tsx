@@ -5,8 +5,6 @@ import Footer from "@/components/layout/Footer";
 import { Toaster } from "sonner";
 import { iosSplashScreens } from "@/data/iosSplashScreens";
 import { RegisterServiceWorker } from "./register-sw";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { SEOKeywords } from "@/data/statics";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -73,8 +71,6 @@ export default async function RootLayout({
         <Navbar />
         <main>
           <TooltipProvider>{children}</TooltipProvider>
-          <Analytics />
-          <SpeedInsights />
         </main>
         <Footer />
         <Toaster

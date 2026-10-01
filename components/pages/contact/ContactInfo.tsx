@@ -1,4 +1,4 @@
-import emailConfig from "@/lib/email";
+import emailConfig from "@/lib/email-config";
 import { Mail, MapPin } from "lucide-react";
 
 export default function ContactInfo() {

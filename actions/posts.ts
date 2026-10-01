@@ -5,10 +5,7 @@ import { headers } from "next/headers";
 import { revalidatePath, updateTag, unstable_cache } from "next/cache";
 import { InitiativeService } from "@/services/initiatives";
 import { InitiativePostsService } from "@/services/posts";
-import {
-  StorageHelpers,
-  extractStoragePath,
-} from "@/services/supabase-storage";
+import { StorageHelpers, extractStoragePath } from "@/services/storage";
 import { PostType, PostStatus, InitiativeStatus } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { sanitizeHTMLServer } from "@/lib/santitize-server";

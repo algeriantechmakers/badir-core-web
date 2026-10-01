@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import emailConfig from "@/lib/email";
+import { sendMail } from "@/lib/email";
 import { PaginatedResponse, PaginationParams } from "@/types/Pagination";
 import {
   Organization,
@@ -10,7 +11,6 @@ import {
   InitiativeStatus,
   Prisma,
 } from "@prisma/client";
-import { Resend } from "resend";
 import { render } from "react-email";
 import OrganizationStatusEmail from "@/emails/OrganizationStatusEmail";
 import InitiativeStatusEmail from "@/emails/InitiativeStatusEmail";
@@ -66,8 +66,6 @@ export interface InitiativeFilters {
   categoryId?: string;
   city?: string;
 }
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export class AdminService {
   static API_PATH = "/admin";
@@ -333,11 +331,11 @@ export class AdminService {
           ownerName: organization.owner.name,
           status: status === "approved" ? "approved" : "rejected",
           rejectionReason: status === "rejected" ? rejectionReason : undefined,
-          dashboardLink: `${process.env.NEXT_PUBLIC_APP_URL || "https://badir.space"}/profile`,
+          dashboardLink: `${process.env.APP_URL || "https://badir.space"}/profile`,
         }),
       );
 
-      await resend.emails.send({
+      await sendMail({
         from: emailConfig.fromEmail,
         to: `"${organization.owner.name}" <${organization.owner.email}>`,
         subject:
@@ -346,8 +344,6 @@ export class AdminService {
             : `تحديث بخصوص طلب منظمتك "${organization.name}" على منصة بادر`,
         replyTo: emailConfig.contactEmail,
         html: emailHtml,
-        headers: { "X-Entity-Ref-ID": `badir-org-status-${Date.now()}` },
-        tags: [{ name: "category", value: "organization-status" }],
       });
 
       return {
@@ -409,11 +405,11 @@ export class AdminService {
             status: status === "published" ? "published" : "cancelled",
             rejectionReason:
               status === "cancelled" ? rejectionReason : undefined,
-            initiativeLink: `${process.env.NEXT_PUBLIC_APP_URL || "https://badir.space"}/initiatives/${initiative.id}`,
+            initiativeLink: `${process.env.APP_URL || "https://badir.space"}/initiatives/${initiative.id}`,
           }),
         );
 
-        await resend.emails.send({
+        await sendMail({
           from: emailConfig.fromEmail,
           to: `"${initiative.organizerUser.name}" <${initiative.organizerUser.email}>`,
           subject:
@@ -422,10 +418,6 @@ export class AdminService {
               : `تحديث بخصوص مبادرتك "${initiative.titleAr}" على منصة بادر`,
           replyTo: emailConfig.contactEmail,
           html: emailHtml,
-          headers: {
-            "X-Entity-Ref-ID": `badir-initiative-status-${Date.now()}`,
-          },
-          tags: [{ name: "category", value: "initiative-status" }],
         });
       }
 

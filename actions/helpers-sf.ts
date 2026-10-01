@@ -1,19 +1,19 @@
 "use server";
 import { auth } from "@/lib/auth";
 import { InitiativeService } from "@/services/initiatives";
-import { StorageHelpers } from "@/services/supabase-storage";
+import { StorageHelpers } from "@/services/storage";
 import { BUCKETS } from "@/types/Statics";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types/Statics";
-import { extractStoragePath } from "@/services/supabase-storage";
+import { extractStoragePath } from "@/services/storage";
 import { UserService } from "@/services/user";
 import { prisma } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 import { isManagementRole } from "@/lib/permissions";
 
 /**
- * Returns the public URL for a file stored in Supabase Storage.
+ * Returns the public URL for a file stored in object storage.
  * @param bucket - The name of the storage bucket.
  * @param path - The relative path of the file (as stored in DB).
  * @returns The public URL string, or null if not found.

@@ -10,10 +10,6 @@ import {
   registrationSchema,
   type RegistrationFormData,
 } from "@/schemas/signupUserSchema";
-import {
-  StorageHelpers,
-  extractStoragePath,
-} from "@/services/supabase-storage";
 import { getCallingCodeFromCountry, mimeTypeToExtension } from "@/lib/utils";
 import path from "path";
 import { UserProfile, validateUserProfile } from "@/schemas";

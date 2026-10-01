@@ -356,13 +356,13 @@ erDiagram
 
 Client Request → Server Function / Next.js API Route → Service Layer → Prisma ORM → PostgreSQL
 
-## Setup Instructions
+## Quick Start
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- PostgreSQL database
-- Supabase account (for file storage)
+- Node.js 18+ and npm/pnpm
+- Docker Engine
+- Docker Compose
 
 ### Installation
 
@@ -376,7 +376,7 @@ Client Request → Server Function / Next.js API Route → Service Layer → Pri
 ### Install dependencies
 
 ```bash
-   npm install
+   pnpm install
 ```
 
 ### Set up environment variables
@@ -385,22 +385,30 @@ Client Request → Server Function / Next.js API Route → Service Layer → Pri
    cp .env.example .env.local
 ```
 
+### Start Postgres + the other services
+
 ```bash
-   cp .env.example .env.local
+docker compose up -d --wait
 ```
-
-### Configure the following in .env.local:
-
-- Database URL (PostgreSQL)
-- Better Auth secrets
-- Supabase credentials
-- Resend API key and email configuration
 
 ### Set up database
 
 ```bash
    npx prisma migrate dev
    npx prisma db seed
+```
+
+### Set up S3_ENDPOINT
+
+Open the following file based on your OS:
+
+- Windows: C:\Windows\System32\drivers\etc\hostsmacOS
+- Linux: /etc/hosts
+
+Add this line at the bottom of the file and save it:
+
+```bash
+127.0.0.1  minio
 ```
 
 ### Start development server
@@ -473,7 +481,7 @@ To promote a user to admin role, run: `npm run admin:promote` and follow the pro
 
 Badir uses two separate email services, each optimized for its specific purpose:
 
-### Transactional Emails (Resend)
+### Transactional Emails (SMTP)
 
 **Purpose**: Time-sensitive, user-triggered emails requiring high deliverability
 
@@ -487,12 +495,16 @@ Badir uses two separate email services, each optimized for its specific purpose:
 **Configuration**:
 
 ```bash
-RESEND_API_KEY=re_...
-RESEND_FROM_EMAIL=noreply@yourdomain.com
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your_smtp_user
+SMTP_PASS=your_smtp_password
+SMTP_FROM_EMAIL=noreply@yourdomain.com
 CONTACT_EMAIL=contact@yourdomain.com
 ```
 
-**Implementation**: Uses [Resend](https://resend.com) with `react-email` templates for type-safe, responsive emails.
+**Implementation**: Uses `nodemailer` with `react-email` templates for type-safe, responsive emails.
 
 ### Newsletter Emails (MailerLite)
 
@@ -512,7 +524,7 @@ MAILERLITE_API_KEY=eyJ...
 MAILERLITE_WEBHOOK_SECRET=...
 ```
 
-**Implementation**: Uses [MailerLite](https://mailerlite.com) API for subscription management with production-ready rate limiting via Upstash Redis.
+**Implementation**: Uses [MailerLite](https://mailerlite.com) API for subscription management with production-ready rate limiting via Redis.
 
 ### Webhook Queue System
 
@@ -536,8 +548,7 @@ To keep user newsletter status synchronized with MailerLite (unsubscribes, bounc
 
 ```bash
 CRON_SECRET=...  # Generated via: openssl rand -base64 32
-UPSTASH_REDIS_REST_URL=https://...  # For rate limiting
-UPSTASH_REDIS_REST_TOKEN=...
+REDIS_URL=redis://localhost:6379  # For rate limiting
 ```
 
 **Deployment Notes**:

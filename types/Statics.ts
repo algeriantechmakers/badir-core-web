@@ -62,7 +62,7 @@ export interface ProximitySearch {
   radiusKm?: number;
 }
 
-// ======== Supabase Storage ========
+// ======== Object Storage ========
 
 export type BUCKETS = "avatars" | "documents" | "post-images";
 

@@ -3,23 +3,28 @@ import statistics from "@/data/statistics";
 import { InitiativeService } from "@/services/initiatives";
 import { OrganizationService } from "@/services/organizations";
 import { UserService } from "@/services/user";
+import { unstable_cache } from "next/cache";
 
-export const revalidate = 86400; // Revalidate the stats page every 24 hours
+export const dynamic = "force-dynamic";
 
-async function getStats(): Promise<{
-  initiatives: number;
-  organizations: number;
-  activeVolunteers: number;
-}> {
-  const [initiatives, organizations, activeVolunteers] = await Promise.all([
-    InitiativeService.getInitiativesCount(),
-    OrganizationService.getOrganizationsCount(),
-    UserService.getUsersCount(),
-  ]);
+const getStats = unstable_cache(
+  async (): Promise<{
+    initiatives: number;
+    organizations: number;
+    activeVolunteers: number;
+  }> => {
+    const [initiatives, organizations, activeVolunteers] = await Promise.all([
+      InitiativeService.getInitiativesCount(),
+      OrganizationService.getOrganizationsCount(),
+      UserService.getUsersCount(),
+    ]);
 
-  // one for Bunian
-  return { initiatives, organizations: organizations + 1, activeVolunteers };
-}
+    // one for Bunian
+    return { initiatives, organizations: organizations + 1, activeVolunteers };
+  },
+  ["landing:stats"],
+  { revalidate: 86400, tags: ["stats"] },
+);
 export default async function Stats() {
   const stats = await getStats();
   return (

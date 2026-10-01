@@ -1,0 +1,92 @@
+name: "🧹 Delete PR Docker Images"
+
+on:
+  pull_request:
+    types: [closed]
+
+# Deleting package versions in GHCR requires packages: write on the repo token.
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: pr-image-cleanup-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  delete-pr-image:
+    name: "🧹 Remove pr-${{ github.event.pull_request.number }}"
+    # Only same-repo PRs ever publish preview images (see ci.yml `pr-image`), and a
+    # fork PR's GITHUB_TOKEN is read-only — nothing to clean up either way.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OWNER: ${{ github.repository_owner }}
+      PACKAGE: ${{ github.event.repository.name }}
+      PR_TAG: pr-${{ github.event.pull_request.number }}
+    steps:
+      # `type=ref,event=pr` publishes as pr-<n>; drop exactly that tag (and its
+      # now-untagged manifest). The action tolerates a missing package/tag, but
+      # GHCR refuses to delete the *last tagged version* of a package, which a
+      # preview package hits before any release image (latest/<version>) exists.
+      # Attempt the tag delete first and let the fallback handle that refusal.
+      - name: Delete PR image tag from GHCR
+        id: tag-cleanup
+        continue-on-error: true # the fallback below inspects the failure
+        uses: dataaxiom/ghcr-cleanup-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          owner: ${{ github.repository_owner }}
+          packages: ${{ github.event.repository.name }}
+          delete-tags: pr-${{ github.event.pull_request.number }}
+          exclude-tags: latest
+
+      - name: Delete the whole package if the PR tag is its last tag
+        if: steps.tag-cleanup.outcome == 'failure'
+        run: |
+          set -euo pipefail
+
+          # algeriantechmakers is an org, so its container packages live under /orgs/.
+          base="/orgs/${OWNER}/packages/container/${PACKAGE}"
+
+          # One tags array per version, across all pages. Only a 404 (package
+          # already gone) may downgrade to a no-op — anything else (403/429/5xx)
+          # must fail loudly: this workflow fires once, on close, so a swallowed
+          # transient error would leak the image forever.
+          err="${RUNNER_TEMP}/gh-versions-err.txt"
+          if ! versions=$(gh api --paginate "${base}/versions" \
+                --jq '.[] | (.metadata.container.tags // [])' 2>"$err"); then
+            if grep -q 'HTTP 404' "$err"; then
+              echo "Package ${PACKAGE} not found under ${OWNER}; nothing to clean up."
+              exit 0
+            fi
+            cat "$err" >&2
+            echo "::error::Could not list ${PACKAGE} versions, so the failed tag cleanup cannot be diagnosed. Re-run the job."
+            exit 1
+          fi
+
+          has_tag=$(printf '%s\n' "$versions" | jq -rs --arg t "$PR_TAG" 'any(.[]; index($t))')
+          if [ "$has_tag" != 'true' ]; then
+            echo "::warning::${PR_TAG} is already gone from ${PACKAGE} even though the tag cleanup failed — check its log above for leftovers."
+            exit 0
+          fi
+
+          tagged_count=$(printf '%s\n' "$versions" | jq -rs 'map(select(length > 0)) | length')
+          if [ "$tagged_count" -gt 1 ]; then
+            echo "::error::${PR_TAG} still exists in ${PACKAGE} and is not its last tag — the tag cleanup failed for another reason; see its log above."
+            exit 1
+          fi
+
+          # GHCR's documented way out for the last tagged version: delete the whole
+          # package (this also reaps any orphaned untagged manifests).
+          if out=$(gh api --method DELETE "$base" 2>&1); then
+            echo "Deleted package ${PACKAGE} (removed last tag ${PR_TAG})."
+          elif grep -q 'HTTP 404' <<<"$out"; then
+            echo "Package ${PACKAGE} was already deleted."
+          else
+            printf '%s\n' "$out" >&2
+            echo "::error::Failed to delete package ${PACKAGE}. The built-in GITHUB_TOKEN needs admin on the package — ensure it is linked to this repo (Package settings → 'Inherit access from repository'), or supply a PAT with delete:packages."
+            exit 1
+          fi

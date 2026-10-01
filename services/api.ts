@@ -1,13 +1,15 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 /**
- * API client instance configured with base `/api` URL and default headers.
+ * API client instance configured with a same-origin `/api` base URL.
  * _Must be used on the client-side only_
+ *
+ * The base URL is relative on purpose: the browser resolves it against
+ * whatever origin served the page, so no NEXT_PUBLIC_* value has to be
+ * inlined at build time and one image serves every environment.
  */
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: "/api",
   headers: {
     "Content-Type": "application/json",
   },
