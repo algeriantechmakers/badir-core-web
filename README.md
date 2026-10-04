@@ -408,8 +408,14 @@ Open the following file based on your OS:
 Add this line at the bottom of the file and save it:
 
 ```bash
-127.0.0.1  minio
+127.0.0.1  rustfs
 ```
+
+Local object storage is served by the `rustfs` container in `docker-compose.yml` (S3 API on
+port 9000, web console on http://localhost:9001). Note that RustFS cannot read MinIO's on-disk
+format, so if you are coming from an older checkout that used MinIO, objects already uploaded
+locally are not carried over — re-upload anything you still need. Deployed environments use
+Cloudflare R2 and are unaffected.
 
 ### Start development server
 

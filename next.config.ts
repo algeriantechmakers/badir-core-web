@@ -3,7 +3,7 @@ const isDev = process.env.NODE_ENV === "development";
 /**
  * Allows a deployment to serve objects from a custom CDN domain without editing
  * this file: set S3_PUBLIC_URL at build time and its host joins the allowlist.
- * Optional — the static patterns below already cover R2 and local MinIO.
+ * Optional — the static patterns below already cover R2 and local RustFS.
  */
 const extraImageHosts: NonNullable<NextConfig["images"]>["remotePatterns"] =
   (() => {
@@ -54,9 +54,9 @@ const nextConfig: NextConfig = {
       // Cloudflare R2: public dev buckets and the S3 API endpoint.
       { protocol: "https", hostname: "*.r2.dev" },
       { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
-      // Local MinIO.
+      // Local RustFS.
       { protocol: "http", hostname: "localhost", port: "9000" },
-      { protocol: "http", hostname: "minio", port: "9000" },
+      { protocol: "http", hostname: "rustfs", port: "9000" },
       ...extraImageHosts,
     ],
     qualities: [60, 80, 100],
