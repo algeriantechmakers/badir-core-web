@@ -31,7 +31,11 @@ import { AdminOrganizationCard, AdminService } from "@/services/admin";
 import { AdminOrganizationStatusBadge } from "../AdminStatusBadge";
 import SearchInput from "@/components/SearchInput";
 import FilterSelect from "@/components/FilterSelect";
-import { organizationTypeOptions } from "@/types/Profile";
+import {
+  ORGANIZATION_TYPES,
+  organizationTypeOptions,
+  workAreaOptions,
+} from "@/types/Profile";
 import PaginationControls from "@/components/PaginationControls";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
@@ -237,7 +241,11 @@ const OrganizationsManagement = ({
                           {org.owner.isActive ? "نشط" : "غير نشط"}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {org.organizationType}
+                          {
+                            ORGANIZATION_TYPES[
+                              org.organizationType as keyof typeof ORGANIZATION_TYPES
+                            ]
+                          }
                         </Badge>
                         <Badge
                           className={`flex items-center gap-1 text-xs ${org.isVerified ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}
@@ -377,7 +385,8 @@ const OrganizationsManagement = ({
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedOrg.workAreas.map((area, index) => (
                     <Badge key={index} variant="outline">
-                      {area}
+                      {workAreaOptions.find((option) => option.value === area)
+                        ?.label || area}
                     </Badge>
                   ))}
                 </div>

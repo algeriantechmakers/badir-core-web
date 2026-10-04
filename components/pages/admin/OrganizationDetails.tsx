@@ -34,6 +34,7 @@ import {
 } from "@/actions/admin";
 import { toast } from "sonner";
 import { SwitchInput } from "@/components/form-input/index";
+import { workAreaOptions } from "@/types/Profile";
 
 interface OrganizationDetailsProps {
   organization: Awaited<ReturnType<typeof AdminService.getOrganizationById>>;
@@ -234,7 +235,8 @@ const OrganizationDetails = ({
                 <div className="mt-2 flex flex-wrap gap-2">
                   {organization.workAreas.map((area, index) => (
                     <Badge key={index} variant="outline">
-                      {area}
+                      {workAreaOptions.find((option) => option.value === area)
+                        ?.label || area}
                     </Badge>
                   ))}
                 </div>
