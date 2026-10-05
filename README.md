@@ -360,7 +360,7 @@ Client Request → Server Function / Next.js API Route → Service Layer → Pri
 
 ### Prerequisites
 
-- Node.js 18+ and npm/pnpm
+- Node.js 18+ and pnpm
 - Docker Engine
 - Docker Compose
 
@@ -398,23 +398,10 @@ docker compose up -d --wait
    npx prisma db seed
 ```
 
-### Set up S3_ENDPOINT
-
-Open the following file based on your OS:
-
-- Windows: C:\Windows\System32\drivers\etc\hostsmacOS
-- Linux: /etc/hosts
-
-Add this line at the bottom of the file and save it:
-
-```bash
-127.0.0.1  minio
-```
-
 ### Start development server
 
 ```bash
-   npm run dev
+   pnpm run dev
 ```
 
 ### Open your browser
@@ -473,7 +460,7 @@ actions
 
 ## Admin Setup
 
-To promote a user to admin role, run: `npm run admin:promote` and follow the prompts to enter the user's email address.
+To promote a user to admin role, run: `pnpm run admin:promote` and follow the prompts to enter the user's email address.
 
 ---
 
@@ -553,7 +540,7 @@ REDIS_URL=redis://localhost:6379  # For rate limiting
 
 **Deployment Notes**:
 
-- Run `npm run db:migrate` to create `webhook_events` table
+- Run `pnpm run db:migrate` to create `webhook_events` table
 - Configure webhook in MailerLite dashboard after deployment
 - Vercel Cron activates automatically in production
 - See `WEBHOOK_QUEUE_QUICK_START.md` for complete setup guide

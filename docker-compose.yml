@@ -108,6 +108,7 @@ services:
       - badir_minio:/data
 
     environment:
+      MINIO_SERVER_URL: http://localhost:9000
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
 
