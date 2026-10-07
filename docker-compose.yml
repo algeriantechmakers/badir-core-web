@@ -94,8 +94,8 @@ services:
   # Local object storage. Deployed environments use Cloudflare R2 — both speak
   # the S3 API, so the app keeps one code path; only the S3_* values in .env
   # change between local and deployed.
-  minio:
-    image: cgr.dev/chainguard/minio:latest
+  rustfs:
+    image: rustfs/rustfs:latest
     restart: unless-stopped
 
     # No `command:` override: the image entrypoint reads RUSTFS_VOLUMES and
@@ -138,9 +138,9 @@ services:
     depends_on:
       rustfs:
         condition: service_healthy
-    entrypoint: >
-      /bin/sh -c "
-      rc alias set local http://rustfs:9000 '${RUSTFS_ACCESS_KEY:-rustfsadmin}' '${RUSTFS_SECRET_KEY:-rustfsadmin}' &&
+    entrypoint: ["/bin/sh", "-c"]
+    command: >-
+      rc alias set local http://rustfs:9000 "${RUSTFS_ACCESS_KEY:-rustfsadmin}" "${RUSTFS_SECRET_KEY:-rustfsadmin}" &&
       rc mb --ignore-existing local/${S3_BUCKET:-badir} &&
       rc anonymous set download local/${S3_BUCKET:-badir}
 
