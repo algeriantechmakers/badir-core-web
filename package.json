@@ -13,7 +13,7 @@
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
     "db:generate": "dotenv -e .env.local -- prisma generate",
-    "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
+    "db:migrate": "dotenv -e .env.local --override -- prisma migrate dev",
     "db:migrate:deploy": "dotenv -e .env.local -- prisma migrate deploy",
     "db:migrate:reset": "prisma migrate reset",
     "db:studio": "prisma studio",

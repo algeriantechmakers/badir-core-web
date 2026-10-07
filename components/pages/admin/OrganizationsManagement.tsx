@@ -26,6 +26,8 @@ import {
   ArrowUpRight,
   Loader2,
   Circle,
+  Snowflake,
+  Trash2,
 } from "lucide-react";
 import { AdminOrganizationCard, AdminService } from "@/services/admin";
 import { AdminOrganizationStatusBadge } from "../AdminStatusBadge";
@@ -42,6 +44,9 @@ import Link from "next/link";
 import { updateOrganizationStatusAction } from "@/actions/admin";
 import { toast } from "sonner";
 import { useAdminOrganizations } from "@/hooks/useAdminOrganizations";
+import FreezeOrgDialog from "./organizations/FreezeOrgDialog";
+import RemoveOrgDialog from "./organizations/RemoveOrgDialog";
+import UnfreezeOrgDialog from "./organizations/UnfreezeOrgDialog";
 
 interface OrganizationsManagementProps {
   initialData: Awaited<ReturnType<typeof AdminService.getOrganizations>>;
@@ -147,6 +152,7 @@ const OrganizationsManagement = ({
                   { value: "pending", label: "قيد المراجعة" },
                   { value: "approved", label: "مقبولة" },
                   { value: "rejected", label: "مرفوضة" },
+                  { value: "FROZEN", label: "مجمدة" },
                 ]}
                 placeholder="الحالة"
                 className="w-40"
@@ -238,7 +244,9 @@ const OrganizationsManagement = ({
                                 : "text-gray-600"
                             }`}
                           />
-                          {org.owner.isActive ? "نشط" : "غير نشط"}
+                          {org.owner.isActive
+                            ? "المالك نشط"
+                            : " المالك غير نشط"}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
                           {
@@ -288,6 +296,59 @@ const OrganizationsManagement = ({
                           <Eye className="ml-1 h-4 w-4" />
                           عرض التفاصيل
                         </Button>
+                        {canManage && org.status !== "FROZEN" ? (
+                          <FreezeOrgDialog
+                            orgId={org.id}
+                            orgName={org.name}
+                            trigger={
+                              <Button variant="outline" size="sm">
+                                <Snowflake className="ml-1 h-4 w-4" />
+                                تجميد
+                              </Button>
+                            }
+                            onSuccess={() => {
+                              setOrganizations((prev) =>
+                                prev.filter((o) => o.id !== org.id),
+                              );
+                              toast.success("تم تجميد المنظمة بنجاح");
+                            }}
+                          />
+                        ) : (
+                          <UnfreezeOrgDialog
+                            orgId={org.id}
+                            orgName={org.name}
+                            trigger={
+                              <Button variant="outline" size="sm">
+                                <Snowflake className="ml-1 h-4 w-4" />
+                                رفع التجميد
+                              </Button>
+                            }
+                            onSuccess={() => {
+                              setOrganizations((prev) =>
+                                prev.filter((o) => o.id !== org.id),
+                              );
+                              toast.success("تم رفع تجميد المنظمة بنجاح");
+                            }}
+                          />
+                        )}
+                        {canManage && (
+                          <RemoveOrgDialog
+                            orgId={org.id}
+                            orgName={org.name}
+                            trigger={
+                              <Button variant="destructive" size="sm">
+                                <Trash2 className="ml-1 h-4 w-4" />
+                                حذف
+                              </Button>
+                            }
+                            onSuccess={() => {
+                              setOrganizations((prev) =>
+                                prev.filter((o) => o.id !== org.id),
+                              );
+                              toast.success("تم حذف المنظمة بنجاح");
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   </CardContent>

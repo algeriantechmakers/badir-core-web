@@ -32,6 +32,7 @@ model User {
   newsletterSubscribed     Boolean                 @default(false) @map("newsletter_subscribed")
   newsletterSubscribedAt   DateTime?               @map("newsletter_subscribed_at")
   newsletterUnsubscribedAt DateTime?               @map("newsletter_unsubscribed_at")
+  scheduledDeletionAt      DateTime?               @map("scheduled_deletion_at")
   consentGiven             Boolean                 @default(false) @map("consent_given")
   consentGivenAt           DateTime?               @map("consent_given_at")
   consentVersion           String?                 @map("consent_version") // e.g. "v1.0" "v1.1"
@@ -333,12 +334,12 @@ model PostEmailQueue {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  actorId   String   @map("actor_id") @db.VarChar(255)
+  actorId   String?   @map("actor_id") @db.VarChar(255)
   action    String   @db.VarChar(100) // matches AdminAction keys from PDP
   targetId  String?  @map("target_id") @db.VarChar(255) // org/initiative/user id
   createdAt DateTime @default(now()) @map("created_at")
 
-  actor User @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([actorId])
   @@index([createdAt])
@@ -399,6 +400,7 @@ enum OrganizationStatus {
   pending
   approved
   rejected
+  FROZEN
 }
 
 enum ParticipantRole {

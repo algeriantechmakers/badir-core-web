@@ -18,7 +18,7 @@ export interface OrganizationCard {
 
 export interface OrganizationFilters {
   search?: string;
-  status?: OrganizationStatus;
+  status?: { in: OrganizationStatus[] } | null;
   isFeaturedPartner?: boolean;
 }
 
@@ -61,6 +61,88 @@ export class OrganizationService {
     return await prisma.organization.delete({
       where: { id },
     });
+  }
+
+  static async getOwnerNotificationDetails(orgId: string): Promise<{
+    ownerUserId: string;
+    ownerEmail: string;
+    ownerName: string;
+    orgName: string;
+  }> {
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: {
+        name: true,
+        owner: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new Error("Organization not found");
+    }
+
+    return {
+      ownerUserId: organization.owner.id,
+      ownerEmail: organization.owner.email,
+      ownerName: organization.owner.name,
+      orgName: organization.name,
+    };
+  }
+
+  static async freeze(orgId: string): Promise<void> {
+    await prisma.organization.update({
+      where: { id: orgId },
+      data: {
+        status: "FROZEN",
+        updatedAt: new Date(),
+      },
+    });
+  }
+
+  static async unfreeze(orgId: string): Promise<void> {
+    await prisma.organization.update({
+      where: { id: orgId },
+      data: { status: "approved", updatedAt: new Date() },
+    });
+  }
+
+  static async remove(orgId: string): Promise<{
+    ownerUserId: string;
+    ownerEmail: string;
+    orgName: string;
+  }> {
+    const organization = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: {
+        name: true,
+        owner: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!organization) {
+      throw new Error("Organization not found");
+    }
+
+    await prisma.organization.delete({
+      where: { id: orgId },
+    });
+
+    return {
+      ownerUserId: organization.owner.id,
+      ownerEmail: organization.owner.email,
+      orgName: organization.name,
+    };
   }
 
   static async getMany(

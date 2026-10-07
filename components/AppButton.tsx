@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Button as ShadcnButton } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 
 type ButtonProps = {
   type: "primary" | "outline" | "submit" | "outline-submit";
@@ -13,6 +14,7 @@ type ButtonProps = {
   icon?: ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
+  isLoading?: boolean;
   dir?: "ltr" | "rtl";
 };
 
@@ -43,6 +45,7 @@ function AppButton({
   icon,
   onClick,
   disabled = false,
+  isLoading = false,
   dir = "ltr",
 }: ButtonProps) {
   const sizeClasses = {
@@ -71,7 +74,8 @@ function AppButton({
       }
       dir={dir}
     >
-      {icon} {url ? <Link href={url}>{children}</Link> : children}
+      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : icon}{" "}
+      {url ? <Link href={url}>{children}</Link> : children}
     </ShadcnButton>
   );
 }

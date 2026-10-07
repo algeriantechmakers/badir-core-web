@@ -10,8 +10,17 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
 
     const filters = search
-      ? { search, status: OrganizationStatus.approved }
-      : { status: OrganizationStatus.approved };
+      ? {
+          search,
+          status: {
+            in: [OrganizationStatus.approved, OrganizationStatus.FROZEN],
+          },
+        }
+      : {
+          status: {
+            in: [OrganizationStatus.approved, OrganizationStatus.FROZEN],
+          },
+        };
     const result = await OrganizationService.getMany(filters, { page, limit });
 
     return NextResponse.json({ success: true, data: result });

@@ -32,6 +32,47 @@ export class UserService {
     });
   }
 
+  /**
+   * Schedules a user account for permanent deletion 24 hours from now.
+   */
+  static async scheduleAccountDeletion(userId: string): Promise<void> {
+    const scheduledDeletionAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { scheduledDeletionAt },
+    });
+  }
+
+  /**
+   * Permanently deletes every user whose scheduled deletion timestamp has passed.
+   */
+  static async deleteScheduledAccounts(): Promise<number> {
+    const users = await prisma.user.findMany({
+      where: {
+        scheduledDeletionAt: {
+          lte: new Date(),
+        },
+      },
+      select: { id: true },
+    });
+
+    for (const user of users) {
+      await prisma.$transaction(async (tx) => {
+        await tx.postEmailQueue.deleteMany({ where: { userId: user.id } });
+        await tx.initiativeParticipant.deleteMany({
+          where: { userId: user.id },
+        });
+        await tx.session.deleteMany({ where: { userId: user.id } });
+        await tx.account.deleteMany({ where: { userId: user.id } });
+        await tx.userQualification.deleteMany({ where: { userId: user.id } });
+        await tx.user.delete({ where: { id: user.id } });
+      });
+    }
+
+    return users.length;
+  }
+
   static async getUserQualifications(userId: string) {
     return await prisma.userQualification.findMany({
       where: { userId },

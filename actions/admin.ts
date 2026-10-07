@@ -15,6 +15,14 @@ import { enforce, ManagementAction } from "@/lib/permissions";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/db";
 import { writeAudit } from "@/lib/audit";
+import { OrganizationService } from "@/services/organizations";
+import { UserService } from "@/services/user";
+import { sanitizePlainText } from "@/lib/santitize-server";
+import emailConfig, { sendMail } from "@/lib/email";
+import { render } from "react-email";
+import OrganizationFrozenEmail from "@/emails/OrganizationFrozenEmail";
+import OrganizationRemovedEmail from "@/emails/OrganizationRemovedEmail";
+import OrganizationUnfrozenEmail from "@/emails/OrganizationUnfrozenEmail";
 
 /**
  * Get paginated organizations for admin review
@@ -171,6 +179,197 @@ export async function updateOrgVerificationAction(
         error instanceof Error
           ? error.message
           : "حدث خطأ أثناء تحديث توثيق المنظمة",
+    };
+  }
+}
+
+export async function freezeOrganization(
+  orgId: string,
+  adminMessage: string,
+): Promise<ActionResponse<{}, {}>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      throw new Error("يجب تسجيل الدخول");
+    }
+
+    enforce(session.user.role, ManagementAction.FREEZE_ORGANIZATION);
+
+    const sanitizedMessage = sanitizePlainText(adminMessage).trim();
+    if (!sanitizedMessage) {
+      throw new Error("يرجى إدخال رسالة للمؤسسة");
+    }
+
+    const organization =
+      await OrganizationService.getOwnerNotificationDetails(orgId);
+
+    await OrganizationService.freeze(orgId);
+
+    const contactUrl = `${process.env.APP_URL || "https://badir.space"}/contact`;
+    const emailHtml = await render(
+      OrganizationFrozenEmail({
+        orgName: organization.orgName,
+        adminMessage: sanitizedMessage,
+        contactUrl,
+      }),
+    );
+
+    await sendMail({
+      from: emailConfig.fromEmail,
+      to: organization.ownerEmail,
+      subject: `تم تجميد منظمتك "${organization.orgName}" على منصة بادر`,
+      replyTo: emailConfig.contactEmail,
+      html: emailHtml,
+    });
+
+    await writeAudit(
+      session.user.id,
+      ManagementAction.FREEZE_ORGANIZATION,
+      orgId,
+    );
+
+    revalidatePath("/admin/organizations");
+    revalidatePath(`/admin/organizations/${orgId}`);
+
+    return {
+      success: true,
+      message: "تم تجميد المنظمة بنجاح",
+      data: {},
+    };
+  } catch (error) {
+    console.error("Error freezing organization:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "حدث خطأ أثناء تجميد المنظمة",
+    };
+  }
+}
+
+export async function unfreezeOrganization(
+  orgId: string,
+  message?: string,
+): Promise<ActionResponse<{}, {}>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      throw new Error("يجب تسجيل الدخول");
+    }
+
+    enforce(session.user.role, ManagementAction.UNFREEZE_ORGANIZATION);
+
+    const sanitizedMessage = sanitizePlainText(message || "").trim();
+
+    const organization =
+      await OrganizationService.getOwnerNotificationDetails(orgId);
+
+    await OrganizationService.unfreeze(orgId);
+
+    const contactUrl = `${process.env.APP_URL || "https://badir.space"}/contact`;
+    const emailHtml = await render(
+      OrganizationUnfrozenEmail({
+        orgName: organization.orgName,
+        adminMessage: sanitizedMessage,
+        contactUrl,
+      }),
+    );
+
+    await sendMail({
+      from: emailConfig.fromEmail,
+      to: organization.ownerEmail,
+      subject: `تم إلغاء تجميد منظمتك "${organization.orgName}" على منصة بادر`,
+      replyTo: emailConfig.contactEmail,
+      html: emailHtml,
+    });
+
+    await writeAudit(
+      session.user.id,
+      ManagementAction.UNFREEZE_ORGANIZATION,
+      orgId,
+    );
+
+    revalidatePath("/admin/organizations");
+    revalidatePath(`/admin/organizations/${orgId}`);
+
+    return { success: true, message: "تم إلغاء تجميد المنظمة بنجاح", data: {} };
+  } catch (error) {
+    console.error("Error unfreezing organization:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "حدث خطأ أثناء إلغاء تجميد المنظمة",
+    };
+  }
+}
+
+export async function removeOrganization(
+  orgId: string,
+  adminMessage: string,
+): Promise<ActionResponse<{}, {}>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      throw new Error("يجب تسجيل الدخول");
+    }
+
+    enforce(session.user.role, ManagementAction.REMOVE_ORGANIZATION);
+
+    const sanitizedMessage = sanitizePlainText(adminMessage).trim();
+    if (!sanitizedMessage) {
+      throw new Error("يرجى إدخال رسالة للمؤسسة");
+    }
+
+    const deletionDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const deletionDeadline = new Intl.DateTimeFormat("ar-DZ", {
+      dateStyle: "full",
+      timeStyle: "short",
+      timeZone: "Africa/Algiers",
+    }).format(deletionDate);
+
+    const organization = await OrganizationService.remove(orgId);
+
+    await UserService.scheduleAccountDeletion(organization.ownerUserId);
+
+    const contactUrl = `${process.env.APP_URL || "https://badir.space"}/contact`;
+    const emailHtml = await render(
+      OrganizationRemovedEmail({
+        orgName: organization.orgName,
+        adminMessage: sanitizedMessage,
+        deletionDeadline,
+        contactUrl,
+      }),
+    );
+
+    await sendMail({
+      from: emailConfig.fromEmail,
+      to: organization.ownerEmail,
+      subject: `تم حذف منظمتك "${organization.orgName}" من منصة بادر`,
+      replyTo: emailConfig.contactEmail,
+      html: emailHtml,
+    });
+
+    await writeAudit(
+      session.user.id,
+      ManagementAction.REMOVE_ORGANIZATION,
+      orgId,
+    );
+
+    revalidatePath("/admin/organizations");
+    revalidatePath(`/admin/organizations/${orgId}`);
+
+    return {
+      success: true,
+      message: "تم حذف المنظمة وجدولة حذف حساب المالك بنجاح",
+      data: {},
+    };
+  } catch (error) {
+    console.error("Error removing organization:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "حدث خطأ أثناء حذف المنظمة",
     };
   }
 }

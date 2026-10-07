@@ -11,7 +11,10 @@ export const AdminAction = {
   // Organization management
   VIEW_ORGANIZATIONS: "VIEW_ORGANIZATIONS",
   APPROVE_ORGANIZATION: "APPROVE_ORGANIZATION", // admin only
-  REJECT_ORGANIZATION: "REJECT_ORGANIZATION",
+  REJECT_ORGANIZATION: "REJECT_ORGANIZATION", // admin only
+  FREEZE_ORGANIZATION: "FREEZE_ORGANIZATION", // admin only
+  UNFREEZE_ORGANIZATION: "UNFREEZE_ORGANIZATION", // admin only
+  REMOVE_ORGANIZATION: "REMOVE_ORGANIZATION", // admin only
   SET_FEATURED_PARTNER: "SET_FEATURED_PARTNER", // admin only
 
   // Initiative management
@@ -52,6 +55,8 @@ export function isManagementRole(role?: string | null): boolean {
 const ADMIN_ONLY = new Set<AdminAction>([
   AdminAction.ASSIGN_MANAGER,
   AdminAction.APPROVE_ORGANIZATION,
+  AdminAction.FREEZE_ORGANIZATION,
+  AdminAction.REMOVE_ORGANIZATION,
   AdminAction.SET_FEATURED_PARTNER,
 ]);
 

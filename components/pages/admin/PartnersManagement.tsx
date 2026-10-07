@@ -43,7 +43,7 @@ export default function PartnersManagement({
   const [searchQuery, setSearchQuery] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.SubmitEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (searchQuery) params.set("search", searchQuery);

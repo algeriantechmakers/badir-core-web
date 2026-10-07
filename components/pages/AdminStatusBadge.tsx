@@ -1,5 +1,11 @@
 import { Badge } from "../ui/badge";
-import { CheckCircle, XCircle, AlertTriangle, FileText } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  FileText,
+  Snowflake,
+} from "lucide-react";
 import { LucideIcon } from "lucide-react";
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
@@ -34,6 +40,12 @@ const STATUS_CONFIGS: Record<string, StatusConfigs> = {
       variant: "destructive",
       icon: XCircle,
       className: "text-neutrals-100",
+    },
+    FROZEN: {
+      label: "مجمدة",
+      variant: "outline",
+      icon: Snowflake,
+      className: "border-sky-300 bg-sky-50 text-sky-700",
     },
   },
   initiative: {

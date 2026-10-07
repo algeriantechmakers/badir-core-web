@@ -19,6 +19,7 @@ import {
   Building,
   Users,
   ExternalLink,
+  Lock,
 } from "lucide-react";
 import AppButton from "@/components/AppButton";
 import {
@@ -34,11 +35,13 @@ import { isEqual } from "lodash";
 import { countryList } from "@/data/statics";
 import ImageManager from "@/components/ImageManager";
 import { useRouter } from "next/navigation";
+import { OrganizationStatus } from "@prisma/client";
 
 interface OrganizationProfileFormProps {
   defaultValues: Partial<OrganizationProfile> & {
     createdAt?: Date | string;
     isVerified?: boolean;
+    status: OrganizationStatus;
   };
 }
 
@@ -188,7 +191,7 @@ export default function OrganizationProfileForm({
           shape="circle"
         />
         <div className="flex-center-column items-start gap-2">
-          <h2 className="text-neutrals-700 text-2xl font-bold">
+          <h2 className="text-neutrals-700 space-y-2 space-x-1 text-2xl font-bold">
             {defaultValues.name || "المنظمة"}
             <span
               className={cn(
@@ -205,6 +208,17 @@ export default function OrganizationProfileForm({
               )}
               {isVerified ? "منظمة موثقة" : "غير موثقة"}
             </span>
+            {defaultValues.status === "FROZEN" && (
+              <span
+                className={cn(
+                  "text-caption inline-flex items-center gap-1 rounded-full px-3 py-1 font-medium",
+                  "bg-blue-100 text-blue-500",
+                )}
+              >
+                <Lock className="h-4 w-4" />
+                منظمة مجمدة
+              </span>
+            )}
           </h2>
 
           <p className="text-neutrals-500">
