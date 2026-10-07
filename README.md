@@ -394,8 +394,8 @@ docker compose up -d --wait
 ### Set up database
 
 ```bash
-   npx prisma migrate dev
-   npx prisma db seed
+   pnpm prisma migrate dev
+   pnpm prisma db seed
 ```
 
 ### Set up S3_ENDPOINT
@@ -408,13 +408,19 @@ Open the following file based on your OS:
 Add this line at the bottom of the file and save it:
 
 ```bash
-127.0.0.1  minio
+127.0.0.1  rustfs
 ```
+
+Local object storage is served by the `rustfs` container in `docker-compose.yml` (S3 API on
+port 9000, web console on http://localhost:9001). Note that RustFS cannot read MinIO's on-disk
+format, so if you are coming from an older checkout that used MinIO, objects already uploaded
+locally are not carried over — re-upload anything you still need. Deployed environments use
+Cloudflare R2 and are unaffected.
 
 ### Start development server
 
 ```bash
-   npm run dev
+   pnpm dev
 ```
 
 ### Open your browser
@@ -553,7 +559,7 @@ REDIS_URL=redis://localhost:6379  # For rate limiting
 
 **Deployment Notes**:
 
-- Run `npm run db:migrate` to create `webhook_events` table
+- Run `pnpm run db:migrate` to create `webhook_events` table
 - Configure webhook in MailerLite dashboard after deployment
 - Vercel Cron activates automatically in production
 - See `WEBHOOK_QUEUE_QUICK_START.md` for complete setup guide

@@ -4,7 +4,7 @@ name: badir
 # LOCAL DEVELOPMENT ONLY.
 #
 # This compose file runs the EXTERNAL SERVICES the Next.js app needs to talk to:
-# PostgreSQL, Redis, MinIO (S3-compatible object storage) and Mailpit.
+# PostgreSQL, Redis, RustFS (S3-compatible object storage) and Mailpit.
 #
 # The application itself is NOT a service here — it is launched from your IDE
 # (`pnpm dev`, or the run config of your choice) so you keep HMR, breakpoints
@@ -98,32 +98,43 @@ services:
     image: cgr.dev/chainguard/minio:latest
     restart: unless-stopped
 
-    command: server /data --console-address ":9001"
-
+    # No `command:` override: the image entrypoint reads RUSTFS_VOLUMES and
+    # appends the paths as arguments itself. It runs as the non-root user
+    # `rustfs` (10001:10001); a fresh named volume mounted on /data inherits
+    # that ownership from the image, so no permission-fixup service is needed.
     ports:
-      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
-      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "127.0.0.1:${RUSTFS_API_PORT:-9000}:9000"
+      - "127.0.0.1:${RUSTFS_CONSOLE_PORT:-9001}:9001"
 
     volumes:
-      - badir_minio:/data
+      - badir_rustfs:/data
 
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ADDRESS: 0.0.0.0:9001
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-rustfsadmin}
+      RUSTFS_OBS_LOGGER_LEVEL: info
+      # RUSTFS_OBS_LOG_DIRECTORY is deliberately unset so logs go to stdout
+      # and show up in `docker compose logs rustfs`.
 
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9000/health"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 10s
+      # RustFS initialises its volume on first boot, which is slower than
+      # MinIO's — give it room before the first failure counts.
+      start_period: 30s
 
   # One-shot bucket bootstrap so a fresh clone has somewhere to upload to.
   # Exits 0 when done — `docker compose ps` showing "exited (0)" is success.
   minio-init:
     image: alpine:3.20
     depends_on:
-      minio:
+      rustfs:
         condition: service_healthy
     entrypoint: /bin/sh
     command:
@@ -148,4 +159,4 @@ services:
 volumes:
   badir_pgdata:
   badir_mailpit:
-  badir_minio:
+  badir_rustfs:

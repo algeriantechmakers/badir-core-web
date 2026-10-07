@@ -8,7 +8,7 @@ import {
 import { BUCKETS } from "@/types/Statics";
 
 /**
- * S3-compatible object storage (MinIO in local development, Cloudflare R2 in
+ * S3-compatible object storage (RustFS in local development, Cloudflare R2 in
  * deployed environments). Replaces the former Supabase Storage client.
  *
  * The three logical buckets (`avatars`, `documents`, `post-images`) are key
@@ -41,7 +41,7 @@ function s3(): S3Client {
   client = new S3Client({
     region: process.env.S3_REGION || "auto",
     endpoint: requireEnv("S3_ENDPOINT"),
-    // MinIO serves path-style URLs (<endpoint>/<bucket>/<key>); R2 and S3 do not.
+    // RustFS serves path-style URLs (<endpoint>/<bucket>/<key>); R2 and S3 do not.
     forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
     credentials: {
       accessKeyId: requireEnv("S3_ACCESS_KEY_ID"),
@@ -57,7 +57,7 @@ function bucketName(): string {
   return requireEnv("S3_BUCKET");
 }
 
-/** Public base URL objects are served from (CDN domain, or the MinIO bucket URL). */
+/** Public base URL objects are served from (CDN domain, or the RustFS bucket URL). */
 function publicBaseUrl(): string {
   return requireEnv("S3_PUBLIC_URL").replace(/\/+$/, "");
 }
@@ -102,7 +102,7 @@ export function extractStoragePath(url: string | null): string | null {
   try {
     let path = decodeURIComponent(new URL(url).pathname).replace(/^\/+/, "");
 
-    // Path-style endpoints (MinIO) prepend the physical bucket to the key.
+    // Path-style endpoints (RustFS) prepend the physical bucket to the key.
     const physical = process.env.S3_BUCKET;
     if (physical && path.startsWith(`${physical}/`)) {
       path = path.slice(physical.length + 1);
