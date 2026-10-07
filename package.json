@@ -12,7 +12,7 @@
     "type-check": "tsc --noEmit",
     "db:push": "prisma db push",
     "db:pull": "prisma db pull",
-    "db:generate": "prisma generate --env-file .env.local",
+    "db:generate": "dotenv -e .env.local -- prisma generate",
     "db:migrate": "dotenv -e .env.local -- prisma migrate dev",
     "db:migrate:deploy": "dotenv -e .env.local -- prisma migrate deploy",
     "db:migrate:reset": "prisma migrate reset",
