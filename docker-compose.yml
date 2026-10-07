@@ -131,21 +131,18 @@ services:
 
   # One-shot bucket bootstrap so a fresh clone has somewhere to upload to.
   # Exits 0 when done — `docker compose ps` showing "exited (0)" is success.
-  minio-init:
-    image: alpine:3.20
+  rustfs-init:
+    image: rustfs/rc:latest
+    restart: "no"
+
     depends_on:
       rustfs:
         condition: service_healthy
-    entrypoint: /bin/sh
-    command:
-      - -c
-      - |
-        wget -q -O /usr/local/bin/mc https://dl.min.io/client/mc/release/linux-amd64/mc &&
-        chmod +x /usr/local/bin/mc &&
-        mc alias set local http://minio:9000 minioadmin minioadmin &&
-        mc mb --ignore-existing local/badir &&
-        mc anonymous set public local/badir
-    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+      rc alias set local http://rustfs:9000 '${RUSTFS_ACCESS_KEY:-rustfsadmin}' '${RUSTFS_SECRET_KEY:-rustfsadmin}' &&
+      rc mb --ignore-existing local/${S3_BUCKET:-badir} &&
+      rc anonymous set download local/${S3_BUCKET:-badir}
 
     # Public read matches how the deployed bucket is served, so local object
     # URLs work in the browser without signing them first.
