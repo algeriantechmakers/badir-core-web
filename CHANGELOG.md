@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.4.0...1.5.0) (2026-10-09)
+
+
+### Features
+
+* switch local storage manager from minio to rustfs ([3a34528](https://github.com/algeriantechmakers/badir-core-web/commit/3a345287b69148acaa451e6eba93d6fceb22b692))
+
 # [1.4.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.3.0...1.4.0) (2026-10-01)
 
 ### Bug Fixes
