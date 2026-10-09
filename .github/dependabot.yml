@@ -136,7 +136,7 @@ updates:
     commit-message:
       # Parenthesised prefix WITHOUT include → `chore(compose): bump …`. (Bug 1 fix.)
       prefix: "chore(compose)"
-    # Same reasoning as the docker ecosystem: postgres/minio/ofelia major
+    # Same reasoning as the docker ecosystem: postgres/rustfs/ofelia major
     # bumps need operator attention (volume formats, env-var names, healthcheck
     # semantics), not an automatic weekly PR.
     ignore:
