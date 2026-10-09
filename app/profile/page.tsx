@@ -111,6 +111,16 @@ export default async function Page() {
             className="border-neutrals-300 mx-auto max-w-5xl rounded-lg border-2 bg-white p-6 shadow-sm"
             dir="rtl"
           >
+            {!userProfile?.isActive && (
+              <div
+                className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900"
+                role="alert"
+              >
+                <p className="font-semibold">
+                  حسابك موقوف مؤقتاً. تواصل مع الدعم لمزيد من المعلومات.
+                </p>
+              </div>
+            )}
             <UserProfileForm defaultValues={userProfileData} />
             <div className="mt-6">
               <NewsletterSubscription />

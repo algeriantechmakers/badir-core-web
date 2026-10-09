@@ -22,6 +22,9 @@ import { formatDate } from "@/lib/utils";
 import FilterSelect from "@/components/FilterSelect";
 import { UserRole } from "@prisma/client";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
+import FreezeUserDialog from "@/components/pages/admin/users/FreezeUserDialog";
+import RemoveUserDialog from "@/components/pages/admin/users/RemoveUserDialog";
+import { isManagementRole } from "@/lib/permissions";
 
 interface UserManagementTableProps {
   initialData: Awaited<ReturnType<typeof AdminService.getUsers>>;
@@ -112,6 +115,7 @@ export default function UserManagementTable({
   const users = initialData.data;
   const pagination = initialData.pagination;
   const canManageManagers = viewerRole === "ADMIN";
+  const canModerateUsers = isManagementRole(viewerRole);
 
   return (
     <div className="mx-auto max-w-7xl p-6" dir="rtl">
@@ -159,6 +163,7 @@ export default function UserManagementTable({
               <TableHead className="w-1/4">الاسم</TableHead>
               <TableHead className="w-1/4">البريد الإلكتروني</TableHead>
               <TableHead className="w-32">الدور</TableHead>
+              <TableHead className="w-28">الحالة</TableHead>
               <TableHead className="w-44">تاريخ الانضمام</TableHead>
               <TableHead className="text-start">الإجراءات</TableHead>
             </TableRow>
@@ -167,7 +172,7 @@ export default function UserManagementTable({
             {users.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="py-12 text-center text-gray-500"
                 >
                   لا توجد نتائج مطابقة
@@ -188,6 +193,13 @@ export default function UserManagementTable({
                     <TableCell>
                       <Badge variant={roleBadgeVariant(user.role)}>
                         {roleLabels[user.role]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={user.isActive ? "outline" : "destructive"}
+                      >
+                        {user.isActive ? "نشط" : "مجمد"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-gray-600">
@@ -227,8 +239,40 @@ export default function UserManagementTable({
                           </Button>
                         )}
 
-                        {(user.role === "ADMIN" || !canManageManagers) && (
-                          <span className="text-sm text-gray-400">-</span>
+                        {canModerateUsers && (
+                          <>
+                            <FreezeUserDialog
+                              userId={user.id}
+                              userName={user.name}
+                              isFrozen={!user.isActive}
+                              trigger={
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={isPending || isRowPending}
+                                >
+                                  {user.isActive
+                                    ? "تجميد الحساب"
+                                    : "إلغاء التجميد"}
+                                </Button>
+                              }
+                            />
+                            <RemoveUserDialog
+                              userId={user.id}
+                              userName={user.name}
+                              trigger={
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="destructive"
+                                  disabled={isPending || isRowPending}
+                                >
+                                  حذف الحساب
+                                </Button>
+                              }
+                            />
+                          </>
                         )}
                       </div>
                     </TableCell>

@@ -23,6 +23,9 @@ import { render } from "react-email";
 import OrganizationFrozenEmail from "@/emails/OrganizationFrozenEmail";
 import OrganizationRemovedEmail from "@/emails/OrganizationRemovedEmail";
 import OrganizationUnfrozenEmail from "@/emails/OrganizationUnfrozenEmail";
+import UserFrozenEmail from "@/emails/UserFrozenEmail";
+import UserRemovedEmail from "@/emails/UserRemovedEmail";
+import UserUnfrozenEmail from "@/emails/UserUnfrozenEmail";
 
 /**
  * Get paginated organizations for admin review
@@ -266,21 +269,24 @@ export async function unfreezeOrganization(
     await OrganizationService.unfreeze(orgId);
 
     const contactUrl = `${process.env.APP_URL || "https://badir.space"}/contact`;
-    const emailHtml = await render(
-      OrganizationUnfrozenEmail({
-        orgName: organization.orgName,
-        adminMessage: sanitizedMessage,
-        contactUrl,
-      }),
-    );
 
-    await sendMail({
-      from: emailConfig.fromEmail,
-      to: organization.ownerEmail,
-      subject: `تم إلغاء تجميد منظمتك "${organization.orgName}" على منصة بادر`,
-      replyTo: emailConfig.contactEmail,
-      html: emailHtml,
-    });
+    if (sanitizedMessage) {
+      const emailHtml = await render(
+        OrganizationUnfrozenEmail({
+          orgName: organization.orgName,
+          adminMessage: sanitizedMessage,
+          contactUrl,
+        }),
+      );
+
+      await sendMail({
+        from: emailConfig.fromEmail,
+        to: organization.ownerEmail,
+        subject: `تم إلغاء تجميد منظمتك "${organization.orgName}" على منصة بادر`,
+        replyTo: emailConfig.contactEmail,
+        html: emailHtml,
+      });
+    }
 
     await writeAudit(
       session.user.id,
@@ -370,6 +376,162 @@ export async function removeOrganization(
       success: false,
       error:
         error instanceof Error ? error.message : "حدث خطأ أثناء حذف المنظمة",
+    };
+  }
+}
+
+export async function freezeUser(
+  userId: string,
+  adminMessage: string,
+): Promise<ActionResponse<{}, {}>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new Error("يجب تسجيل الدخول");
+
+    enforce(session.user.role, ManagementAction.FREEZE_USER);
+
+    const sanitizedMessage = sanitizePlainText(adminMessage).trim();
+    if (!sanitizedMessage) throw new Error("يرجى إدخال رسالة للمستخدم");
+
+    const user = await UserService.freeze(userId);
+    const contactUrl = `${process.env.APP_URL || "https://badir.space"}/contact`;
+    const emailHtml = await render(
+      UserFrozenEmail({
+        userName: user.userName,
+        adminMessage: sanitizedMessage,
+        contactUrl,
+      }),
+    );
+
+    await sendMail({
+      from: emailConfig.fromEmail,
+      to: user.userEmail,
+      subject: "تم تجميد حسابك على منصة بادر",
+      replyTo: emailConfig.contactEmail,
+      html: emailHtml,
+    });
+
+    await writeAudit(session.user.id, ManagementAction.FREEZE_USER, userId);
+    revalidatePath("/admin/users");
+    return { success: true, message: "تم تجميد المستخدم بنجاح", data: {} };
+  } catch (error) {
+    console.error("Error freezing user:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "حدث خطأ أثناء تجميد المستخدم",
+    };
+  }
+}
+
+export async function unfreezeUser(
+  userId: string,
+  adminMessage: string,
+): Promise<ActionResponse<{}, {}>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new Error("يجب تسجيل الدخول");
+
+    enforce(session.user.role, ManagementAction.FREEZE_USER);
+
+    const sanitizedMessage = sanitizePlainText(adminMessage).trim();
+    if (!sanitizedMessage) throw new Error("يرجى إدخال رسالة للمستخدم");
+
+    const user = await UserService.getUser(userId);
+    if (!user) throw new Error("المستخدم غير موجود");
+
+    await UserService.unfreeze(userId);
+
+    const contactUrl = `${process.env.APP_URL || "https://badir.space"}/contact`;
+    const emailHtml = await render(
+      UserUnfrozenEmail({
+        userName: user.name,
+        adminMessage: sanitizedMessage,
+        contactUrl,
+      }),
+    );
+
+    await sendMail({
+      from: emailConfig.fromEmail,
+      to: user.email,
+      subject: "تم إعادة تفعيل حسابك على منصة بادر",
+      replyTo: emailConfig.contactEmail,
+      html: emailHtml,
+    });
+    await writeAudit(session.user.id, ManagementAction.FREEZE_USER, userId);
+    revalidatePath("/admin/users");
+    return {
+      success: true,
+      message: "تم إلغاء تجميد المستخدم بنجاح",
+      data: {},
+    };
+  } catch (error) {
+    console.error("Error unfreezing user:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "حدث خطأ أثناء إلغاء تجميد المستخدم",
+    };
+  }
+}
+
+export async function removeUser(
+  userId: string,
+  adminMessage: string,
+): Promise<ActionResponse<{}, {}>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new Error("يجب تسجيل الدخول");
+
+    enforce(session.user.role, ManagementAction.REMOVE_USER);
+
+    const sanitizedMessage = sanitizePlainText(adminMessage).trim();
+    if (!sanitizedMessage) throw new Error("يرجى إدخال رسالة للمستخدم");
+
+    const user = await UserService.getUser(userId);
+    if (!user) throw new Error("المستخدم غير موجود");
+
+    const deletionDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const deletionDeadline = new Intl.DateTimeFormat("ar-DZ", {
+      dateStyle: "full",
+      timeStyle: "short",
+      timeZone: "Africa/Algiers",
+    }).format(deletionDate);
+
+    await UserService.scheduleAccountDeletion(userId);
+    const contactUrl = `${process.env.APP_URL || "https://badir.space"}/contact`;
+    const emailHtml = await render(
+      UserRemovedEmail({
+        userName: user.name,
+        adminMessage: sanitizedMessage,
+        deletionDeadline,
+        contactUrl,
+      }),
+    );
+
+    await sendMail({
+      from: emailConfig.fromEmail,
+      to: user.email,
+      subject: "سيتم حذف حسابك من منصة بادر",
+      replyTo: emailConfig.contactEmail,
+      html: emailHtml,
+    });
+
+    await writeAudit(session.user.id, ManagementAction.REMOVE_USER, userId);
+    revalidatePath("/admin/users");
+    return {
+      success: true,
+      message: "تم جدولة حذف المستخدم بنجاح",
+      data: {},
+    };
+  } catch (error) {
+    console.error("Error removing user:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "حدث خطأ أثناء حذف المستخدم",
     };
   }
 }

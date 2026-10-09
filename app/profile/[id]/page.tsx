@@ -13,6 +13,7 @@ import { ParticipationService } from "@/services/participations";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import InitiativeCard from "@/components/pages/InitiativeCard";
+import { Badge } from "@/components/ui/badge";
 
 export async function generateMetadata({
   params,
@@ -67,6 +68,11 @@ export default async function UserProfilePage({
             <h1 className="text-neutrals-700 text-2xl font-bold">
               {userData.firstName} {userData.lastName}
             </h1>
+            {!user.isActive && (
+              <Badge variant="secondary" className="text-amber-800">
+                حساب موقوف
+              </Badge>
+            )}
             <p className="text-neutrals-500">
               {userData.qualifications?.currentJob || ""}
             </p>

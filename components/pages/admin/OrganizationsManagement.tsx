@@ -46,7 +46,6 @@ import { toast } from "sonner";
 import { useAdminOrganizations } from "@/hooks/useAdminOrganizations";
 import FreezeOrgDialog from "./organizations/FreezeOrgDialog";
 import RemoveOrgDialog from "./organizations/RemoveOrgDialog";
-import UnfreezeOrgDialog from "./organizations/UnfreezeOrgDialog";
 
 interface OrganizationsManagementProps {
   initialData: Awaited<ReturnType<typeof AdminService.getOrganizations>>;
@@ -296,10 +295,11 @@ const OrganizationsManagement = ({
                           <Eye className="ml-1 h-4 w-4" />
                           عرض التفاصيل
                         </Button>
-                        {canManage && org.status !== "FROZEN" ? (
+                        {canManage && (
                           <FreezeOrgDialog
                             orgId={org.id}
                             orgName={org.name}
+                            isFrozen={org.status === "FROZEN"}
                             trigger={
                               <Button variant="outline" size="sm">
                                 <Snowflake className="ml-1 h-4 w-4" />
@@ -311,23 +311,6 @@ const OrganizationsManagement = ({
                                 prev.filter((o) => o.id !== org.id),
                               );
                               toast.success("تم تجميد المنظمة بنجاح");
-                            }}
-                          />
-                        ) : (
-                          <UnfreezeOrgDialog
-                            orgId={org.id}
-                            orgName={org.name}
-                            trigger={
-                              <Button variant="outline" size="sm">
-                                <Snowflake className="ml-1 h-4 w-4" />
-                                رفع التجميد
-                              </Button>
-                            }
-                            onSuccess={() => {
-                              setOrganizations((prev) =>
-                                prev.filter((o) => o.id !== org.id),
-                              );
-                              toast.success("تم رفع تجميد المنظمة بنجاح");
                             }}
                           />
                         )}

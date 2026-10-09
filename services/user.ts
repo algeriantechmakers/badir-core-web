@@ -18,6 +18,31 @@ export class UserService {
     });
   }
 
+  /** Freezes a user account and invalidates all active sessions. */
+  static async freeze(
+    userId: string,
+  ): Promise<{ userEmail: string; userName: string }> {
+    return await prisma.$transaction(async (tx) => {
+      const user = await tx.user.update({
+        where: { id: userId },
+        data: { isActive: false },
+        select: { email: true, name: true },
+      });
+
+      await tx.session.deleteMany({ where: { userId } });
+
+      return { userEmail: user.email, userName: user.name };
+    });
+  }
+
+  /** Re-enables a frozen user account. */
+  static async unfreeze(userId: string): Promise<void> {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { isActive: true },
+    });
+  }
+
   static async deleteUser(userId: string): Promise<void> {
     await prisma.$transaction(async (tx) => {
       // 1. Remove from email queue so they get no future emails

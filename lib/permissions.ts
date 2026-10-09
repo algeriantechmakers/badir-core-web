@@ -6,6 +6,8 @@ export const AdminAction = {
   // User management
   VIEW_USERS: "VIEW_USERS",
   DEACTIVATE_USER: "DEACTIVATE_USER",
+  FREEZE_USER: "FREEZE_USER",
+  REMOVE_USER: "REMOVE_USER",
   ASSIGN_MANAGER: "ASSIGN_MANAGER", // admin only
 
   // Organization management
