@@ -21,7 +21,7 @@ export default function RemoveOrgDialog({
     <AdminActionDialog
       trigger={trigger}
       title={`حذف المنظمة - ${orgName}`}
-      description="سيتم حذف المنظمة وإبلاغ المالك بأن حسابه سيحذف نهائياً بعد 24 ساعة."
+      description="ستتم إزالة المؤسسة، كما سيتم حذف حساب المالك بعد مرور 24 ساعة، وسيتم إبلاغه بذلك. يمكن الاعتراض خلال هذه المهلة."
       confirmLabel="حذف"
       destructive
       requireConfirmation

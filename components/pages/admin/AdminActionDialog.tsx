@@ -17,6 +17,7 @@ import FormInput from "@/components/form-input/FormInput";
 import AppButton from "@/components/AppButton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { CheckboxInput } from "@/components/form-input";
 
 interface AdminActionDialogProps {
   trigger: React.ReactNode;
@@ -111,18 +112,14 @@ export default function AdminActionDialog({
 
           {requireConfirmation && (
             <div className="flex items-center gap-2">
-              <Checkbox
-                id="admin-action-confirmation"
-                checked={confirmed}
-                onCheckedChange={(value) => setConfirmed(Boolean(value))}
+              <CheckboxInput
+                name="admin-action-confirmation"
+                value={confirmed}
+                onChange={(value) => setConfirmed(Boolean(value))}
                 disabled={loading}
+                type="checkbox"
+                label="أفهم عواقب هذا الإجراء"
               />
-              <label
-                htmlFor="admin-action-confirmation"
-                className="cursor-pointer text-sm text-gray-700"
-              >
-                أفهم عواقب هذا الإجراء
-              </label>
             </div>
           )}
 

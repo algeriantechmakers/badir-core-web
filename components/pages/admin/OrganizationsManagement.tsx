@@ -303,7 +303,9 @@ const OrganizationsManagement = ({
                             trigger={
                               <Button variant="outline" size="sm">
                                 <Snowflake className="ml-1 h-4 w-4" />
-                                تجميد
+                                {org.status === "FROZEN"
+                                  ? "إلغاء التجميد"
+                                  : "تجميد"}
                               </Button>
                             }
                             onSuccess={() => {

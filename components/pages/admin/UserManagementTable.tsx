@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Search } from "lucide-react";
+import { ArrowUpRight, Circle, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AdminService, AdminUserCard } from "@/services/admin";
 import { assignManager, revokeManager } from "@/actions/admin";
@@ -24,7 +24,7 @@ import { UserRole } from "@prisma/client";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import FreezeUserDialog from "@/components/pages/admin/users/FreezeUserDialog";
 import RemoveUserDialog from "@/components/pages/admin/users/RemoveUserDialog";
-import { isManagementRole } from "@/lib/permissions";
+import Link from "next/link";
 
 interface UserManagementTableProps {
   initialData: Awaited<ReturnType<typeof AdminService.getUsers>>;
@@ -115,7 +115,7 @@ export default function UserManagementTable({
   const users = initialData.data;
   const pagination = initialData.pagination;
   const canManageManagers = viewerRole === "ADMIN";
-  const canModerateUsers = isManagementRole(viewerRole);
+  const canModerateUsers = viewerRole === "ADMIN" || viewerRole === "MANAGER";
 
   return (
     <div className="mx-auto max-w-7xl p-6" dir="rtl">
@@ -185,7 +185,14 @@ export default function UserManagementTable({
                 return (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium text-gray-900">
-                      {user.name}
+                      <Link
+                        href={`/profile/${user.id}`}
+                        target="_blank"
+                        className="flex items-center gap-0.5 hover:underline"
+                      >
+                        <ArrowUpRight className="ml-1 inline-block h-4 w-4 text-gray-500" />
+                        {user.name}
+                      </Link>
                     </TableCell>
                     <TableCell className="text-gray-600">
                       {user.email}
@@ -197,8 +204,13 @@ export default function UserManagementTable({
                     </TableCell>
                     <TableCell>
                       <Badge
-                        variant={user.isActive ? "outline" : "destructive"}
+                        className={`flex items-center gap-1 text-xs ${user.isActive ? "bg-secondary-100 text-primary-400" : "bg-neutrals-300 text-neutrals-600"}`}
                       >
+                        <Circle
+                          className={`h-2 w-2 fill-current ${
+                            user.isActive ? "text-primary-400" : "text-gray-600"
+                          }`}
+                        />
                         {user.isActive ? "نشط" : "مجمد"}
                       </Badge>
                     </TableCell>
@@ -218,7 +230,7 @@ export default function UserManagementTable({
                             {isRowPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              "Make Manager"
+                              "ترقية إلى مدير"
                             )}
                           </Button>
                         )}
@@ -234,7 +246,7 @@ export default function UserManagementTable({
                             {isRowPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              "Revoke Manager"
+                              "إلغاء صلاحية المدير"
                             )}
                           </Button>
                         )}
