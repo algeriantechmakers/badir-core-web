@@ -16,7 +16,7 @@ const getApprovedOrganizations = unstable_cache(
     OrganizationService.getMany(
       {
         status: {
-          in: [OrganizationStatus.approved, OrganizationStatus.FROZEN],
+          in: [OrganizationStatus.approved, OrganizationStatus.frozen],
         },
       },
       { page: 1, limit: 12 },

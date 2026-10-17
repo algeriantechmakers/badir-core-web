@@ -152,7 +152,7 @@ const OrganizationsManagement = ({
                   { value: "pending", label: "قيد المراجعة" },
                   { value: "approved", label: "مقبولة" },
                   { value: "rejected", label: "مرفوضة" },
-                  { value: "FROZEN", label: "مجمدة" },
+                  { value: "frozen", label: "مجمدة" },
                 ]}
                 placeholder="الحالة"
                 className="w-40"
@@ -303,11 +303,11 @@ const OrganizationsManagement = ({
                           <FreezeOrgDialog
                             orgId={org.id}
                             orgName={org.name}
-                            isFrozen={org.status === "FROZEN"}
+                            isFrozen={org.status === "frozen"}
                             trigger={
                               <Button variant="outline" size="sm">
                                 <Snowflake className="ml-1 h-4 w-4" />
-                                {org.status === "FROZEN"
+                                {org.status === "frozen"
                                   ? "إلغاء التجميد"
                                   : "تجميد"}
                               </Button>
@@ -319,15 +319,15 @@ const OrganizationsManagement = ({
                                     ? {
                                         ...o,
                                         status:
-                                          org.status === "FROZEN"
+                                          org.status === "frozen"
                                             ? "approved"
-                                            : "FROZEN",
+                                            : "frozen",
                                       }
                                     : o,
                                 ),
                               );
                               toast.success(
-                                org.status === "FROZEN"
+                                org.status === "frozen"
                                   ? "تم إلغاء تجميد المنظمة بنجاح"
                                   : "تم تجميد المنظمة بنجاح",
                               );

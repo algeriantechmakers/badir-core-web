@@ -335,7 +335,7 @@ model PostEmailQueue {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  actorId   String?   @map("actor_id") @db.VarChar(255)
+  actorId   String?  @map("actor_id") @db.VarChar(255)
   action    String   @db.VarChar(100) // matches AdminAction keys from PDP
   targetId  String?  @map("target_id") @db.VarChar(255) // org/initiative/user id
   createdAt DateTime @default(now()) @map("created_at")
@@ -401,7 +401,7 @@ enum OrganizationStatus {
   pending
   approved
   rejected
-  FROZEN
+  frozen
 }
 
 enum ParticipantRole {

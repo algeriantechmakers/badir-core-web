@@ -41,7 +41,7 @@ const STATUS_CONFIGS: Record<string, StatusConfigs> = {
       icon: XCircle,
       className: "text-neutrals-100",
     },
-    FROZEN: {
+    frozen: {
       label: "مجمدة",
       variant: "outline",
       icon: Snowflake,

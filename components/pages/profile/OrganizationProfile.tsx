@@ -209,7 +209,7 @@ export default function OrganizationProfileForm({
               )}
               {isVerified ? "منظمة موثقة" : "غير موثقة"}
             </span>
-            {defaultValues.status === "FROZEN" && (
+            {defaultValues.status === "frozen" && (
               <span
                 className={cn(
                   "text-caption inline-flex items-center gap-1 rounded-full px-3 py-1 font-medium",

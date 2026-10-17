@@ -56,7 +56,7 @@ export default async function OrganizationProfilePage({
   const isOwner = session?.user?.id === orgData.userId;
   const isAdmin = session?.user?.role === "ADMIN";
   const isApproved =
-    orgData.status === "approved" || orgData.status === "FROZEN";
+    orgData.status === "approved" || orgData.status === "frozen";
 
   // Only show to approved organizations, the owner, or admins
   if (!isApproved && !isOwner && !isAdmin) {
@@ -94,7 +94,7 @@ export default async function OrganizationProfilePage({
                 )}
                 {orgData.officialLicense ? "منظمة مرخصة" : "غير مرخصة"}
               </span>
-              {orgData.status === "FROZEN" && (
+              {orgData.status === "frozen" && (
                 <span
                   className={
                     "text-caption inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-500"

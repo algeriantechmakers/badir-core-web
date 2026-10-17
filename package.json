@@ -16,6 +16,7 @@
     "db:migrate": "dotenv -e .env.local --override -- prisma migrate dev",
     "db:migrate:deploy": "dotenv -e .env.local -- prisma migrate deploy",
     "db:migrate:reset": "prisma migrate reset",
+    "db:migrate:create-only": "dotenv -e .env.local --override -- prisma migrate dev --create-only",
     "db:studio": "prisma studio",
     "db:reset": "dotenv -e .env.local -- tsx prisma/reset.ts",
     "db:seed": "dotenv -e .env.local -- tsx prisma/seed.ts",

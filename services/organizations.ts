@@ -99,7 +99,7 @@ export class OrganizationService {
     await prisma.organization.update({
       where: { id: orgId },
       data: {
-        status: "FROZEN",
+        status: "frozen",
         updatedAt: new Date(),
       },
     });

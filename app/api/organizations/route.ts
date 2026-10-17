@@ -13,12 +13,12 @@ export async function GET(request: NextRequest) {
       ? {
           search,
           status: {
-            in: [OrganizationStatus.approved, OrganizationStatus.FROZEN],
+            in: [OrganizationStatus.approved, OrganizationStatus.frozen],
           },
         }
       : {
           status: {
-            in: [OrganizationStatus.approved, OrganizationStatus.FROZEN],
+            in: [OrganizationStatus.approved, OrganizationStatus.frozen],
           },
         };
     const result = await OrganizationService.getMany(filters, { page, limit });
