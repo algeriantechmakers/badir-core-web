@@ -33,11 +33,9 @@ export default function FreezeUserDialog({
         const result = isFrozen
           ? await unfreezeUser(userId, message)
           : await freezeUser(userId, message);
-        if (!result.success) {
-          throw new Error(result.error || "تعذر تنفيذ الإجراء");
-        }
-        onSuccess?.();
+        return result;
       }}
+      onSuccess={onSuccess}
     />
   );
 }

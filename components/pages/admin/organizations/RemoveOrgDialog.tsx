@@ -21,17 +21,15 @@ export default function RemoveOrgDialog({
     <AdminActionDialog
       trigger={trigger}
       title={`حذف المنظمة - ${orgName}`}
-      description="ستتم إزالة المؤسسة، كما سيتم حذف حساب المالك بعد مرور 24 ساعة، وسيتم إبلاغه بذلك. يمكن الاعتراض خلال هذه المهلة."
+      description="ستتم جدولة حذف المنظمة وحساب مالكها بعد 24 ساعة، وسيتم إبلاغه بذلك. يمكن الاعتراض خلال هذه المهلة."
       confirmLabel="حذف"
       destructive
       requireConfirmation
       onConfirm={async (message) => {
         const result = await removeOrganization(orgId, message);
-        if (!result.success) {
-          throw new Error(result.error || "تعذر حذف المنظمة");
-        }
-        onSuccess?.();
+        return result;
       }}
+      onSuccess={onSuccess}
     />
   );
 }

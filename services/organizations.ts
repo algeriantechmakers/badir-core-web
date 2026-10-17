@@ -117,6 +117,7 @@ export class OrganizationService {
     ownerEmail: string;
     orgName: string;
   }> {
+    const scheduledDeletionAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
     const organization = await prisma.organization.findUnique({
       where: { id: orgId },
       select: {
@@ -134,8 +135,9 @@ export class OrganizationService {
       throw new Error("Organization not found");
     }
 
-    await prisma.organization.delete({
+    await prisma.organization.update({
       where: { id: orgId },
+      data: { scheduledDeletionAt },
     });
 
     return {
@@ -143,6 +145,20 @@ export class OrganizationService {
       ownerEmail: organization.owner.email,
       orgName: organization.name,
     };
+  }
+
+  static async restore(orgId: string): Promise<void> {
+    await prisma.organization.update({
+      where: { id: orgId },
+      data: { scheduledDeletionAt: null, status: "approved" },
+    });
+  }
+
+  static async deleteScheduledOrganizations(): Promise<number> {
+    const result = await prisma.organization.deleteMany({
+      where: { scheduledDeletionAt: { lte: new Date() } },
+    });
+    return result.count;
   }
 
   static async getMany(

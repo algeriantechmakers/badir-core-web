@@ -24,6 +24,7 @@ import { UserRole } from "@prisma/client";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
 import FreezeUserDialog from "@/components/pages/admin/users/FreezeUserDialog";
 import RemoveUserDialog from "@/components/pages/admin/users/RemoveUserDialog";
+import RestoreUserDialog from "@/components/pages/admin/users/RestoreUserDialog";
 import Link from "next/link";
 
 interface UserManagementTableProps {
@@ -211,7 +212,11 @@ export default function UserManagementTable({
                             user.isActive ? "text-primary-400" : "text-gray-600"
                           }`}
                         />
-                        {user.isActive ? "نشط" : "مجمد"}
+                        {user.scheduledDeletionAt
+                          ? "مجدول للحذف"
+                          : user.isActive
+                            ? "نشط"
+                            : "مجمد"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-gray-600">
@@ -253,6 +258,21 @@ export default function UserManagementTable({
 
                         {canModerateUsers && (
                           <>
+                            {user.scheduledDeletionAt && (
+                              <RestoreUserDialog
+                                userId={user.id}
+                                userName={user.name}
+                                trigger={
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                  >
+                                    استعادة الحساب
+                                  </Button>
+                                }
+                              />
+                            )}
                             <FreezeUserDialog
                               userId={user.id}
                               userName={user.name}
@@ -270,20 +290,22 @@ export default function UserManagementTable({
                                 </Button>
                               }
                             />
-                            <RemoveUserDialog
-                              userId={user.id}
-                              userName={user.name}
-                              trigger={
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="destructive"
-                                  disabled={isPending || isRowPending}
-                                >
-                                  حذف الحساب
-                                </Button>
-                              }
-                            />
+                            {!user.scheduledDeletionAt && (
+                              <RemoveUserDialog
+                                userId={user.id}
+                                userName={user.name}
+                                trigger={
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="destructive"
+                                    disabled={isPending || isRowPending}
+                                  >
+                                    حذف الحساب
+                                  </Button>
+                                }
+                              />
+                            )}
                           </>
                         )}
                       </div>

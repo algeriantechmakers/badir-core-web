@@ -73,6 +73,9 @@ export default async function UserProfilePage({
                 حساب موقوف
               </Badge>
             )}
+            {user.scheduledDeletionAt && (
+              <Badge variant="destructive">الحساب مجدول للحذف</Badge>
+            )}
             <p className="text-neutrals-500">
               {userData.qualifications?.currentJob || ""}
             </p>

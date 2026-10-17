@@ -104,6 +104,11 @@ export default async function OrganizationProfilePage({
                   منظمة مجمدة
                 </span>
               )}
+              {orgData.scheduledDeletionAt && (
+                <span className="text-caption inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 font-medium text-red-700">
+                  المنظمة مجدولة للحذف
+                </span>
+              )}
             </h1>
             <p className="text-neutrals-500">{orgData.organizationType}</p>
           </div>

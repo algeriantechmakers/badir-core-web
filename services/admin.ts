@@ -81,9 +81,10 @@ export class AdminService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.UserWhereInput = {};
+    where.role = { not: "ADMIN" };
 
     if (filters.role && filters.role !== "all") {
-      where.role = filters.role;
+      where.role = filters.role === "ADMIN" ? { not: "ADMIN" } : filters.role;
     }
 
     if (filters.q) {
@@ -104,6 +105,7 @@ export class AdminService {
         role: true,
         isActive: true,
         createdAt: true,
+        scheduledDeletionAt: true,
       },
       orderBy: [{ createdAt: "desc" }],
       skip,

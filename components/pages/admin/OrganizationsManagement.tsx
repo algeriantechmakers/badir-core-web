@@ -46,6 +46,7 @@ import { toast } from "sonner";
 import { useAdminOrganizations } from "@/hooks/useAdminOrganizations";
 import FreezeOrgDialog from "./organizations/FreezeOrgDialog";
 import RemoveOrgDialog from "./organizations/RemoveOrgDialog";
+import RestoreOrgDialog from "./organizations/RestoreOrgDialog";
 
 interface OrganizationsManagementProps {
   initialData: Awaited<ReturnType<typeof AdminService.getOrganizations>>;
@@ -233,6 +234,9 @@ const OrganizationsManagement = ({
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <AdminOrganizationStatusBadge status={org.status} />
+                        {org.scheduledDeletionAt && (
+                          <Badge variant="destructive">مجدولة للحذف</Badge>
+                        )}
                         <Badge
                           className={`flex items-center gap-1 text-xs ${org.owner.isActive ? "bg-secondary-100 text-primary-400" : "bg-neutrals-300 text-neutrals-600"}`}
                         >
@@ -310,30 +314,72 @@ const OrganizationsManagement = ({
                             }
                             onSuccess={() => {
                               setOrganizations((prev) =>
-                                prev.filter((o) => o.id !== org.id),
+                                prev.map((o) =>
+                                  o.id === org.id
+                                    ? {
+                                        ...o,
+                                        status:
+                                          org.status === "FROZEN"
+                                            ? "approved"
+                                            : "FROZEN",
+                                      }
+                                    : o,
+                                ),
                               );
-                              toast.success("تم تجميد المنظمة بنجاح");
+                              toast.success(
+                                org.status === "FROZEN"
+                                  ? "تم إلغاء تجميد المنظمة بنجاح"
+                                  : "تم تجميد المنظمة بنجاح",
+                              );
                             }}
                           />
                         )}
-                        {canManage && (
-                          <RemoveOrgDialog
-                            orgId={org.id}
-                            orgName={org.name}
-                            trigger={
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="ml-1 h-4 w-4" />
-                                حذف
-                              </Button>
-                            }
-                            onSuccess={() => {
-                              setOrganizations((prev) =>
-                                prev.filter((o) => o.id !== org.id),
-                              );
-                              toast.success("تم حذف المنظمة بنجاح");
-                            }}
-                          />
-                        )}
+                        {canManage &&
+                          (org.scheduledDeletionAt ? (
+                            <RestoreOrgDialog
+                              orgId={org.id}
+                              orgName={org.name}
+                              trigger={
+                                <Button variant="outline" size="sm">
+                                  استعادة المنظمة
+                                </Button>
+                              }
+                              onSuccess={() => {
+                                setOrganizations((prev) =>
+                                  prev.map((o) =>
+                                    o.id === org.id
+                                      ? { ...o, scheduledDeletionAt: null }
+                                      : o,
+                                  ),
+                                );
+                                toast.success("تم استعادة المنظمة بنجاح");
+                              }}
+                            />
+                          ) : (
+                            <RemoveOrgDialog
+                              orgId={org.id}
+                              orgName={org.name}
+                              trigger={
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="ml-1 h-4 w-4" />
+                                  حذف
+                                </Button>
+                              }
+                              onSuccess={() => {
+                                setOrganizations((prev) =>
+                                  prev.map((o) =>
+                                    o.id === org.id
+                                      ? {
+                                          ...o,
+                                          scheduledDeletionAt: new Date(),
+                                        }
+                                      : o,
+                                  ),
+                                );
+                                toast.success("تم جدولة حذف المنظمة بنجاح");
+                              }}
+                            />
+                          ))}
                       </div>
                     </div>
                   </CardContent>

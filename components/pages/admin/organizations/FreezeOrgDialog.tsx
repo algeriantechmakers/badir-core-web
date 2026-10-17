@@ -37,13 +37,9 @@ export default function FreezeOrgDialog({
         const result = isFrozen
           ? await unfreezeOrganization(orgId, message)
           : await freezeOrganization(orgId, message);
-        if (!result.success) {
-          throw new Error(
-            result.error || isFrozen ? "تعذّر إعادة التفعيل" : "تعذّر التجميد",
-          );
-        }
-        onSuccess?.();
+        return result;
       }}
+      onSuccess={onSuccess}
     />
   );
 }

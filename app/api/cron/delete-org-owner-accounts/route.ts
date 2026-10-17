@@ -1,6 +1,7 @@
-// TODO: register in badir-compose ofelia labels — daily schedule, no-overlap: true
+// TODO: register in badir-compose ofelia labels - daily schedule, no-overlap: true
 import { NextRequest, NextResponse } from "next/server";
 import { UserService } from "@/services/user";
+import { OrganizationService } from "@/services/organizations";
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -10,7 +11,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const deleted = await UserService.deleteScheduledAccounts();
-    return NextResponse.json({ deleted });
+    const deletedOrganizations =
+      await OrganizationService.deleteScheduledOrganizations();
+    return NextResponse.json({ deleted, deletedOrganizations });
   } catch (error) {
     console.error("Scheduled account deletion cron error:", error);
     return NextResponse.json(

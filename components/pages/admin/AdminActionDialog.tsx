@@ -18,6 +18,7 @@ import AppButton from "@/components/AppButton";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CheckboxInput } from "@/components/form-input";
+import type { AdminActionResult } from "@/actions/admin";
 
 interface AdminActionDialogProps {
   trigger: React.ReactNode;
@@ -27,7 +28,8 @@ interface AdminActionDialogProps {
   confirmLabel: string;
   destructive?: boolean;
   requireConfirmation?: boolean;
-  onConfirm: (message: string) => Promise<void>;
+  onConfirm: (message: string) => Promise<AdminActionResult>;
+  onSuccess?: () => void;
   isLoading?: boolean;
 }
 
@@ -43,6 +45,7 @@ export default function AdminActionDialog({
   destructive = false,
   requireConfirmation = false,
   onConfirm,
+  onSuccess,
   isLoading = false,
 }: AdminActionDialogProps) {
   const router = useRouter();
@@ -74,11 +77,19 @@ export default function AdminActionDialog({
 
     try {
       setSubmitting(true);
-      await onConfirm(message);
+      const result = await onConfirm(message);
+      if (!result.actionTaken) {
+        toast.error(result.error || "حدث خطأ أثناء تنفيذ الإجراء");
+        return;
+      }
       setOpen(false);
       setMessage("");
       setConfirmed(false);
       router.refresh();
+      onSuccess?.();
+      if (!result.emailSent) {
+        toast.warning("تم تنفيذ الإجراء، لكن تعذّر إرسال البريد الإلكتروني");
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "حدث خطأ أثناء تنفيذ الإجراء",

@@ -42,6 +42,7 @@ interface OrganizationProfileFormProps {
     createdAt?: Date | string;
     isVerified?: boolean;
     status: OrganizationStatus;
+    scheduledDeletionAt?: Date | string | null;
   };
 }
 
@@ -217,6 +218,11 @@ export default function OrganizationProfileForm({
               >
                 <Lock className="h-4 w-4" />
                 منظمة مجمدة
+              </span>
+            )}
+            {defaultValues.scheduledDeletionAt && (
+              <span className="text-caption inline-flex items-center rounded-full bg-red-100 px-3 py-1 font-medium text-red-700">
+                المنظمة مجدولة للحذف
               </span>
             )}
           </h2>

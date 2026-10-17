@@ -63,9 +63,31 @@ export class UserService {
   static async scheduleAccountDeletion(userId: string): Promise<void> {
     const scheduledDeletionAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    await prisma.user.update({
-      where: { id: userId },
-      data: { scheduledDeletionAt },
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { scheduledDeletionAt },
+      });
+      await tx.organization.updateMany({
+        where: { userId },
+        data: { scheduledDeletionAt },
+      });
+    });
+  }
+
+  /**
+   * Restores a user account that was previously scheduled for deletion.
+   */
+  static async restoreUser(userId: string): Promise<void> {
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: { scheduledDeletionAt: null },
+      });
+      await tx.organization.updateMany({
+        where: { userId },
+        data: { scheduledDeletionAt: null, status: "approved" },
+      });
     });
   }
 
@@ -84,6 +106,7 @@ export class UserService {
 
     for (const user of users) {
       await prisma.$transaction(async (tx) => {
+        await tx.organization.deleteMany({ where: { userId: user.id } });
         await tx.postEmailQueue.deleteMany({ where: { userId: user.id } });
         await tx.initiativeParticipant.deleteMany({
           where: { userId: user.id },

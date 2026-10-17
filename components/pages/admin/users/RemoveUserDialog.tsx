@@ -27,11 +27,9 @@ export default function RemoveUserDialog({
       requireConfirmation
       onConfirm={async (message) => {
         const result = await removeUser(userId, message);
-        if (!result.success) {
-          throw new Error(result.error || "تعذر حذف المستخدم");
-        }
-        onSuccess?.();
+        return result;
       }}
+      onSuccess={onSuccess}
     />
   );
 }

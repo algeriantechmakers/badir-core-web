@@ -69,6 +69,7 @@ model Organization {
   country             String             @default("Algeria") @db.VarChar(100)
   createdAt           DateTime           @default(now()) @map("created_at")
   updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at")
+  scheduledDeletionAt DateTime?          @map("scheduled_deletion_at")
   foundingDate        DateTime?          @map("founding_date") @db.Date
   headquarters        String?            @map("headquarters") @db.VarChar(255)
   identificationCard  String?            @map("identification_card") @db.VarChar(500)
