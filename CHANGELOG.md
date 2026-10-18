@@ -1,3 +1,19 @@
+# [1.6.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.5.0...1.6.0) (2026-10-18)
+
+
+### Bug Fixes
+
+* arabic org labels, script env fix, minio publisher ([d099d0d](https://github.com/algeriantechmakers/badir-core-web/commit/d099d0d412f7d3b89d128ee64d0ae07baa5c6aa3))
+* some ui and reflections ([eef5ae0](https://github.com/algeriantechmakers/badir-core-web/commit/eef5ae0b918487202a2321083396ba37b79d088c))
+
+
+### Features
+
+* added reports system for users, organizations and posts ([8e18583](https://github.com/algeriantechmakers/badir-core-web/commit/8e18583824fd0c7db494fa52ab19353ea6295685))
+* freeze/unfreeze and remove administrative actions in admin panels ([f54cb6b](https://github.com/algeriantechmakers/badir-core-web/commit/f54cb6b794cba26bbc479fb50e79d839ae8d5967))
+* freeze/unfreeze and remove user accounts management actions ([7978488](https://github.com/algeriantechmakers/badir-core-web/commit/7978488d5c12b52b7961dd87fe9323286b7ffdb7))
+* restore user and organization features with tailored error messages for server failures ([1ad1260](https://github.com/algeriantechmakers/badir-core-web/commit/1ad1260bc0ac13b8dd6edf6810b04a4542608bc3))
+
 # [1.5.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.4.0...1.5.0) (2026-10-09)
 
 
