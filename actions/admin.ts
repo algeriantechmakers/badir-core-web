@@ -6,7 +6,13 @@ import {
   InitiativeFilters,
   UserFilters,
 } from "@/services/admin";
-import { OrganizationStatus, InitiativeStatus, UserRole } from "@prisma/client";
+import {
+  OrganizationStatus,
+  InitiativeStatus,
+  UserRole,
+  ReportReason,
+  ReportTarget,
+} from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { ActionResponse } from "@/types/Statics";
 import { checkAdminPermission } from "@/lib/permissions";
@@ -26,12 +32,146 @@ import OrganizationUnfrozenEmail from "@/emails/OrganizationUnfrozenEmail";
 import UserFrozenEmail from "@/emails/UserFrozenEmail";
 import UserRemovedEmail from "@/emails/UserRemovedEmail";
 import UserUnfrozenEmail from "@/emails/UserUnfrozenEmail";
+import PostRemovedEmail from "@/emails/PostRemovedEmail";
+import { ReportService } from "@/services/reports";
+import { InitiativePostsService } from "@/services/posts";
 
 export type AdminActionResult = {
   actionTaken: boolean;
   emailSent: boolean;
   error?: string;
 };
+
+export async function createReport(data: {
+  targetType: ReportTarget;
+  targetId: string;
+  reason: ReportReason;
+  customReason?: string;
+}): Promise<AdminActionResult> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new Error("يجب تسجيل الدخول");
+    enforce(session.user.role, ManagementAction.CREATE_REPORT);
+
+    const customReason = sanitizePlainText(data.customReason || "").trim();
+    if (data.reason === ReportReason.OTHER && !customReason) {
+      throw new Error("يرجى إدخال سبب البلاغ");
+    }
+
+    await ReportService.create({
+      ...data,
+      reporterId: session.user.id,
+      customReason: customReason || undefined,
+    });
+    return { actionTaken: true, emailSent: false };
+  } catch (error) {
+    console.error("Error creating report:", error);
+    return {
+      actionTaken: false,
+      emailSent: false,
+      error: error instanceof Error ? error.message : "تعذر إرسال البلاغ",
+    };
+  }
+}
+
+export async function resolveReport(
+  reportId: string,
+): Promise<AdminActionResult> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new Error("يجب تسجيل الدخول");
+    enforce(session.user.role, ManagementAction.RESOLVE_REPORT);
+    await ReportService.resolve(reportId, session.user.id);
+    return { actionTaken: true, emailSent: false };
+  } catch (error) {
+    console.error("Error resolving report:", error);
+    return {
+      actionTaken: false,
+      emailSent: false,
+      error: error instanceof Error ? error.message : "تعذر تحديث البلاغ",
+    };
+  }
+}
+
+export async function dismissReport(
+  reportId: string,
+): Promise<AdminActionResult> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new Error("يجب تسجيل الدخول");
+    enforce(session.user.role, ManagementAction.DISMISS_REPORT);
+    await ReportService.dismiss(reportId, session.user.id);
+    return { actionTaken: true, emailSent: false };
+  } catch (error) {
+    console.error("Error dismissing report:", error);
+    return {
+      actionTaken: false,
+      emailSent: false,
+      error: error instanceof Error ? error.message : "تعذر رفض البلاغ",
+    };
+  }
+}
+
+export async function removePost(
+  postId: string,
+  adminMessage: string,
+): Promise<AdminActionResult> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) throw new Error("يجب تسجيل الدخول");
+    enforce(session.user.role, ManagementAction.REMOVE_POST);
+
+    const sanitizedMessage = sanitizePlainText(adminMessage).trim();
+    if (!sanitizedMessage) throw new Error("يرجى إدخال رسالة الإدارة");
+
+    const post = await prisma.initiativePost.findUnique({
+      where: { id: postId },
+      select: { initiative: { select: { organizerOrgId: true } } },
+    });
+    if (!post) throw new Error("المنشور غير موجود");
+    if (
+      session.user.role === UserRole.MANAGER &&
+      !post.initiative.organizerOrgId
+    ) {
+      throw new Error("لا يمكن للمدير إزالة منشور من مبادرة فردية");
+    }
+
+    const removed = await InitiativePostsService.remove(postId);
+    const contactUrl = `${process.env.APP_URL || "https://badir.space"}/contact`;
+    let emailSent = false;
+    try {
+      const emailHtml = await render(
+        PostRemovedEmail({
+          ...removed,
+          adminMessage: sanitizedMessage,
+          contactUrl,
+        }),
+      );
+      await sendMail({
+        from: emailConfig.fromEmail,
+        to: removed.authorEmail,
+        subject: `تمت إزالة منشورك من مبادرة "${removed.initiativeTitle}"`,
+        replyTo: emailConfig.contactEmail,
+        html: emailHtml,
+      });
+      emailSent = true;
+    } catch (emailError) {
+      console.error("Error sending post removal email:", emailError);
+    }
+
+    await writeAudit(session.user.id, ManagementAction.REMOVE_POST, postId);
+    revalidatePath("/admin/reports");
+    return { actionTaken: true, emailSent };
+  } catch (error) {
+    console.error("Error removing post:", error);
+    return {
+      actionTaken: false,
+      emailSent: false,
+      error:
+        error instanceof Error ? error.message : "حدث خطأ أثناء إزالة المنشور",
+    };
+  }
+}
 
 /**
  * Get paginated organizations for admin review

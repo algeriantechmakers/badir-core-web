@@ -522,13 +522,13 @@ const CategoriesManagement = () => {
                 onClick={() => setIsCreateDialogOpen(false)}
                 disabled={isPending}
                 size="sm"
-                border="default"
+                border="square"
               >
                 إلغاء
               </AppButton>
               <AppButton
                 type="primary"
-                border="default"
+                border="square"
                 size="sm"
                 disabled={isPending}
                 icon={
@@ -710,7 +710,7 @@ const CategoriesManagement = () => {
                 type="outline"
                 onClick={() => setIsEditDialogOpen(false)}
                 disabled={isPending}
-                border="default"
+                border="square"
                 size="sm"
               >
                 إلغاء
@@ -718,7 +718,7 @@ const CategoriesManagement = () => {
               <AppButton
                 type="primary"
                 disabled={isPending}
-                border="default"
+                border="square"
                 size="sm"
                 icon={
                   isPending ? (

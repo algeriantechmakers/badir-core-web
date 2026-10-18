@@ -204,7 +204,7 @@ export default function InitiativeJoinForm({
         type="submit"
         disabled={isPending}
         className="w-full"
-        border="default"
+        border="square"
       >
         {isPending ? (
           <>

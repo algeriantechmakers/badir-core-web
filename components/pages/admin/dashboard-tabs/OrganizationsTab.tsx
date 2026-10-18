@@ -214,7 +214,7 @@ export const OrganizationsTab = ({
                 type="outline"
                 url="/admin/organizations"
                 className="mx-auto"
-                border="default"
+                border="square"
                 icon={<ArrowUpLeft className="ml-1 h-4 w-4" />}
               >
                 عرض المزيد

@@ -17,6 +17,7 @@ import {
   Trash,
   Edit,
   Calendar,
+  Flag,
 } from "lucide-react";
 import PostEditor from "@/components/PostEditor";
 import { PostType } from "@prisma/client";
@@ -39,6 +40,8 @@ import Link from "next/link";
 import parse from "html-react-parser";
 import { toast } from "sonner";
 import { ImageStrip } from "@/components/ImageStrip";
+import ReportDialog from "@/components/ReportDialog";
+import { ReportTarget } from "@prisma/client";
 
 export default function PostsPanel({
   initiativeId,
@@ -269,6 +272,22 @@ export default function PostsPanel({
                       >
                         {post.title || "بدون عنوان"}
                       </h3>
+                      {post.author?.id !== currentUserId && (
+                        <ReportDialog
+                          targetType={ReportTarget.POST}
+                          targetId={post.id}
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="mt-2 gap-1"
+                            >
+                              <Flag className="h-3 w-3" />
+                              إبلاغ
+                            </Button>
+                          }
+                        />
+                      )}
                     </div>
 
                     {canEdit && (

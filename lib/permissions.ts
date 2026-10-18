@@ -3,6 +3,11 @@ import { auth } from "./auth";
 import { InitiativeService } from "@/services/initiatives";
 
 export const AdminAction = {
+  // Reporting
+  CREATE_REPORT: "create:report",
+  REMOVE_POST: "remove:post",
+  RESOLVE_REPORT: "resolve:report",
+  DISMISS_REPORT: "dismiss:report",
   // User management
   VIEW_USERS: "VIEW_USERS",
   DEACTIVATE_USER: "DEACTIVATE_USER",
@@ -70,10 +75,12 @@ const MANAGER_ACTIONS = new Set<AdminAction>(
   [...ALL_MANAGEMENT_ACTIONS].filter((a) => !ADMIN_ONLY.has(a)),
 );
 
+const USER_ACTIONS = new Set<AdminAction>([AdminAction.CREATE_REPORT]);
+
 const POLICY: Record<string, Set<AdminAction>> = {
   ADMIN: ALL_MANAGEMENT_ACTIONS,
   MANAGER: MANAGER_ACTIONS,
-  USER: new Set(),
+  USER: USER_ACTIONS,
 };
 
 /**

@@ -137,7 +137,7 @@ export default function AdminActionDialog({
           <DialogFooter>
             <AppButton
               type="outline"
-              border="default"
+              border="square"
               disabled={loading}
               onClick={() => setOpen(false)}
             >
@@ -145,7 +145,7 @@ export default function AdminActionDialog({
             </AppButton>
             <AppButton
               type="submit"
-              border="default"
+              border="square"
               disabled={!canSubmit || loading}
               isLoading={loading}
               className={cn(

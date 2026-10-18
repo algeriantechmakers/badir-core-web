@@ -1,3 +1,4 @@
+import { ReportReason } from "@prisma/client";
 import { JSX } from "react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -103,3 +104,12 @@ export type ActionResponse<T, R> = {
   errors?: Partial<Record<keyof T, string[]>>;
   data?: R;
 };
+
+export const REPORT_REASONS: Array<{ value: ReportReason; label: string }> = [
+  { value: ReportReason.HARMFUL_CONTENT, label: "محتوى مسيء" },
+  { value: ReportReason.MISINFORMATION, label: "معلومات مضللة" },
+  { value: ReportReason.FRAUD, label: "احتيال أو نصب" },
+  { value: ReportReason.TERMS_VIOLATION, label: "انتهاك الشروط" },
+  { value: ReportReason.HARASSMENT, label: "مضايقة" },
+  { value: ReportReason.OTHER, label: "أخرى" },
+];

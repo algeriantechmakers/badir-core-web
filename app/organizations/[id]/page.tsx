@@ -12,13 +12,17 @@ import {
   Briefcase,
   Home,
   Lock,
+  Flag,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import OrgInitiative from "@/components/pages/OrgInitiative";
 import { workAreaOptions } from "@/types/Profile";
-import { cn, getTranslatedCountryName } from "@/lib/utils";
+import { getTranslatedCountryName } from "@/lib/utils";
 import getSessionWithCheckProfile from "@/hooks/getSessionWithCheckProfile";
+import ReportDialog from "@/components/ReportDialog";
+import { Button } from "@/components/ui/button";
+import { ReportTarget } from "@prisma/client";
 
 export async function generateMetadata({
   params,
@@ -111,6 +115,18 @@ export default async function OrganizationProfilePage({
               )}
             </h1>
             <p className="text-neutrals-500">{orgData.organizationType}</p>
+            {!isOwner && (
+              <ReportDialog
+                targetType={ReportTarget.ORGANIZATION}
+                targetId={orgData.id}
+                trigger={
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Flag className="h-4 w-4" />
+                    الإبلاغ عن المنظمة
+                  </Button>
+                }
+              />
+            )}
           </div>
         </div>
 

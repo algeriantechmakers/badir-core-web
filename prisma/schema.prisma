@@ -48,6 +48,8 @@ model User {
   qualifications           UserQualification[]     @relation("UserQualifications")
   lastActiveAt             DateTime?               @map("last_active_at")
   auditLogs                AuditLog[]
+  reportsFiled             Report[]                @relation("ReportsFiled")
+  reportsResolved          Report[]                @relation("ReportsResolved")
 
   @@index([email])
   @@index([createdAt])
@@ -197,6 +199,47 @@ model InitiativePost {
   attachments  PostAttachment[]
 
   @@map("initiative_posts")
+}
+
+enum ReportTarget {
+  USER
+  ORGANIZATION
+  POST
+}
+
+enum ReportReason {
+  HARMFUL_CONTENT
+  MISINFORMATION
+  FRAUD
+  TERMS_VIOLATION
+  HARASSMENT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  reporterId   String       @map("reporter_id")
+  reporter     User         @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType   ReportTarget @map("target_type")
+  targetId     String       @map("target_id")
+  reason       ReportReason
+  customReason String?      @map("custom_reason")
+  status       ReportStatus @default(PENDING)
+  resolvedById String?      @map("resolved_by_id")
+  resolvedBy   User?        @relation("ReportsResolved", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt   DateTime?    @map("resolved_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@index([reporterId])
+  @@map("reports")
 }
 
 model PostAttachment {

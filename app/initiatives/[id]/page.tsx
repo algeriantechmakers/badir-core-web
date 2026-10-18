@@ -176,7 +176,7 @@ export default async function InitiativeDetailsPage({
             <AppButton
               type="primary"
               size="sm"
-              border="default"
+              border="square"
               url={`/initiatives/${initiative.id}/edit`}
             >
               تعديل المبادرة
