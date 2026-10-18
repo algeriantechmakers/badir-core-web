@@ -32,6 +32,7 @@ model User {
   newsletterSubscribed     Boolean                 @default(false) @map("newsletter_subscribed")
   newsletterSubscribedAt   DateTime?               @map("newsletter_subscribed_at")
   newsletterUnsubscribedAt DateTime?               @map("newsletter_unsubscribed_at")
+  scheduledDeletionAt      DateTime?               @map("scheduled_deletion_at")
   consentGiven             Boolean                 @default(false) @map("consent_given")
   consentGivenAt           DateTime?               @map("consent_given_at")
   consentVersion           String?                 @map("consent_version") // e.g. "v1.0" "v1.1"
@@ -47,6 +48,8 @@ model User {
   qualifications           UserQualification[]     @relation("UserQualifications")
   lastActiveAt             DateTime?               @map("last_active_at")
   auditLogs                AuditLog[]
+  reportsFiled             Report[]                @relation("ReportsFiled")
+  reportsResolved          Report[]                @relation("ReportsResolved")
 
   @@index([email])
   @@index([createdAt])
@@ -68,6 +71,7 @@ model Organization {
   country             String             @default("Algeria") @db.VarChar(100)
   createdAt           DateTime           @default(now()) @map("created_at")
   updatedAt           DateTime           @default(now()) @updatedAt @map("updated_at")
+  scheduledDeletionAt DateTime?          @map("scheduled_deletion_at")
   foundingDate        DateTime?          @map("founding_date") @db.Date
   headquarters        String?            @map("headquarters") @db.VarChar(255)
   identificationCard  String?            @map("identification_card") @db.VarChar(500)
@@ -195,6 +199,47 @@ model InitiativePost {
   attachments  PostAttachment[]
 
   @@map("initiative_posts")
+}
+
+enum ReportTarget {
+  USER
+  ORGANIZATION
+  POST
+}
+
+enum ReportReason {
+  HARMFUL_CONTENT
+  MISINFORMATION
+  FRAUD
+  TERMS_VIOLATION
+  HARASSMENT
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+model Report {
+  id           String       @id @default(cuid())
+  reporterId   String       @map("reporter_id")
+  reporter     User         @relation("ReportsFiled", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType   ReportTarget @map("target_type")
+  targetId     String       @map("target_id")
+  reason       ReportReason
+  customReason String?      @map("custom_reason")
+  status       ReportStatus @default(PENDING)
+  resolvedById String?      @map("resolved_by_id")
+  resolvedBy   User?        @relation("ReportsResolved", fields: [resolvedById], references: [id], onDelete: SetNull)
+  resolvedAt   DateTime?    @map("resolved_at")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@index([reporterId])
+  @@map("reports")
 }
 
 model PostAttachment {
@@ -333,12 +378,12 @@ model PostEmailQueue {
 
 model AuditLog {
   id        String   @id @default(cuid())
-  actorId   String   @map("actor_id") @db.VarChar(255)
+  actorId   String?  @map("actor_id") @db.VarChar(255)
   action    String   @db.VarChar(100) // matches AdminAction keys from PDP
   targetId  String?  @map("target_id") @db.VarChar(255) // org/initiative/user id
   createdAt DateTime @default(now()) @map("created_at")
 
-  actor User @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
 
   @@index([actorId])
   @@index([createdAt])
@@ -399,6 +444,7 @@ enum OrganizationStatus {
   pending
   approved
   rejected
+  frozen
 }
 
 enum ParticipantRole {

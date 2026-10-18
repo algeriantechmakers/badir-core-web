@@ -47,7 +47,7 @@ export default function CancelParticipationButton({
       <AppButton
         type="outline"
         size="sm"
-        border="default"
+        border="square"
         className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
         onClick={() => setIsDialogOpen(true)}
         disabled={isPending}

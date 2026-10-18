@@ -19,7 +19,7 @@ export default function BackButton({
       onClick={() => (url ? router.replace(url) : router.back())}
       icon={<ChevronLeft className="h-4 w-4" />}
       size="sm"
-      border="default"
+      border="square"
     >
       {label}
     </AppButton>

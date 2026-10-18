@@ -11,6 +11,8 @@ import {
   Users,
   Briefcase,
   Home,
+  Lock,
+  Flag,
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
@@ -18,6 +20,9 @@ import OrgInitiative from "@/components/pages/OrgInitiative";
 import { workAreaOptions } from "@/types/Profile";
 import { getTranslatedCountryName } from "@/lib/utils";
 import getSessionWithCheckProfile from "@/hooks/getSessionWithCheckProfile";
+import ReportDialog from "@/components/ReportDialog";
+import { Button } from "@/components/ui/button";
+import { ReportTarget } from "@prisma/client";
 
 export async function generateMetadata({
   params,
@@ -54,7 +59,8 @@ export default async function OrganizationProfilePage({
   const session = await getSessionWithCheckProfile();
   const isOwner = session?.user?.id === orgData.userId;
   const isAdmin = session?.user?.role === "ADMIN";
-  const isApproved = orgData.status === "approved";
+  const isApproved =
+    orgData.status === "approved" || orgData.status === "frozen";
 
   // Only show to approved organizations, the owner, or admins
   if (!isApproved && !isOwner && !isAdmin) {
@@ -75,7 +81,7 @@ export default async function OrganizationProfilePage({
             </AvatarFallback>
           </Avatar>
           <div className="flex-center-column items-start gap-2">
-            <h1 className="text-neutrals-700 text-2xl font-bold">
+            <h1 className="text-neutrals-700 space-y-2 space-x-1 text-2xl font-bold">
               {orgData.name}
               {orgData.shortName && ` (${orgData.shortName})`}
               <span
@@ -92,8 +98,35 @@ export default async function OrganizationProfilePage({
                 )}
                 {orgData.officialLicense ? "منظمة مرخصة" : "غير مرخصة"}
               </span>
+              {orgData.status === "frozen" && (
+                <span
+                  className={
+                    "text-caption inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 font-medium text-blue-500"
+                  }
+                >
+                  <Lock className="h-4 w-4" />
+                  منظمة مجمدة
+                </span>
+              )}
+              {orgData.scheduledDeletionAt && (
+                <span className="text-caption inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 font-medium text-red-700">
+                  المنظمة مجدولة للحذف
+                </span>
+              )}
             </h1>
             <p className="text-neutrals-500">{orgData.organizationType}</p>
+            {!isOwner && (
+              <ReportDialog
+                targetType={ReportTarget.ORGANIZATION}
+                targetId={orgData.id}
+                trigger={
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Flag className="h-4 w-4" />
+                    الإبلاغ عن المنظمة
+                  </Button>
+                }
+              />
+            )}
           </div>
         </div>
 

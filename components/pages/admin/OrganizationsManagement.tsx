@@ -26,18 +26,27 @@ import {
   ArrowUpRight,
   Loader2,
   Circle,
+  Snowflake,
+  Trash2,
 } from "lucide-react";
 import { AdminOrganizationCard, AdminService } from "@/services/admin";
 import { AdminOrganizationStatusBadge } from "../AdminStatusBadge";
 import SearchInput from "@/components/SearchInput";
 import FilterSelect from "@/components/FilterSelect";
-import { organizationTypeOptions } from "@/types/Profile";
+import {
+  ORGANIZATION_TYPES,
+  organizationTypeOptions,
+  workAreaOptions,
+} from "@/types/Profile";
 import PaginationControls from "@/components/PaginationControls";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 import { updateOrganizationStatusAction } from "@/actions/admin";
 import { toast } from "sonner";
 import { useAdminOrganizations } from "@/hooks/useAdminOrganizations";
+import FreezeOrgDialog from "./organizations/FreezeOrgDialog";
+import RemoveOrgDialog from "./organizations/RemoveOrgDialog";
+import RestoreOrgDialog from "./organizations/RestoreOrgDialog";
 
 interface OrganizationsManagementProps {
   initialData: Awaited<ReturnType<typeof AdminService.getOrganizations>>;
@@ -143,6 +152,7 @@ const OrganizationsManagement = ({
                   { value: "pending", label: "قيد المراجعة" },
                   { value: "approved", label: "مقبولة" },
                   { value: "rejected", label: "مرفوضة" },
+                  { value: "frozen", label: "مجمدة" },
                 ]}
                 placeholder="الحالة"
                 className="w-40"
@@ -224,6 +234,9 @@ const OrganizationsManagement = ({
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <AdminOrganizationStatusBadge status={org.status} />
+                        {org.scheduledDeletionAt && (
+                          <Badge variant="destructive">مجدولة للحذف</Badge>
+                        )}
                         <Badge
                           className={`flex items-center gap-1 text-xs ${org.owner.isActive ? "bg-secondary-100 text-primary-400" : "bg-neutrals-300 text-neutrals-600"}`}
                         >
@@ -234,10 +247,16 @@ const OrganizationsManagement = ({
                                 : "text-gray-600"
                             }`}
                           />
-                          {org.owner.isActive ? "نشط" : "غير نشط"}
+                          {org.owner.isActive
+                            ? "المالك نشط"
+                            : " المالك غير نشط"}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {org.organizationType}
+                          {
+                            ORGANIZATION_TYPES[
+                              org.organizationType as keyof typeof ORGANIZATION_TYPES
+                            ]
+                          }
                         </Badge>
                         <Badge
                           className={`flex items-center gap-1 text-xs ${org.isVerified ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}
@@ -280,6 +299,87 @@ const OrganizationsManagement = ({
                           <Eye className="ml-1 h-4 w-4" />
                           عرض التفاصيل
                         </Button>
+                        {canManage && (
+                          <FreezeOrgDialog
+                            orgId={org.id}
+                            orgName={org.name}
+                            isFrozen={org.status === "frozen"}
+                            trigger={
+                              <Button variant="outline" size="sm">
+                                <Snowflake className="ml-1 h-4 w-4" />
+                                {org.status === "frozen"
+                                  ? "إلغاء التجميد"
+                                  : "تجميد"}
+                              </Button>
+                            }
+                            onSuccess={() => {
+                              setOrganizations((prev) =>
+                                prev.map((o) =>
+                                  o.id === org.id
+                                    ? {
+                                        ...o,
+                                        status:
+                                          org.status === "frozen"
+                                            ? "approved"
+                                            : "frozen",
+                                      }
+                                    : o,
+                                ),
+                              );
+                              toast.success(
+                                org.status === "frozen"
+                                  ? "تم إلغاء تجميد المنظمة بنجاح"
+                                  : "تم تجميد المنظمة بنجاح",
+                              );
+                            }}
+                          />
+                        )}
+                        {canManage &&
+                          (org.scheduledDeletionAt ? (
+                            <RestoreOrgDialog
+                              orgId={org.id}
+                              orgName={org.name}
+                              trigger={
+                                <Button variant="outline" size="sm">
+                                  استعادة المنظمة
+                                </Button>
+                              }
+                              onSuccess={() => {
+                                setOrganizations((prev) =>
+                                  prev.map((o) =>
+                                    o.id === org.id
+                                      ? { ...o, scheduledDeletionAt: null }
+                                      : o,
+                                  ),
+                                );
+                                toast.success("تم استعادة المنظمة بنجاح");
+                              }}
+                            />
+                          ) : (
+                            <RemoveOrgDialog
+                              orgId={org.id}
+                              orgName={org.name}
+                              trigger={
+                                <Button variant="destructive" size="sm">
+                                  <Trash2 className="ml-1 h-4 w-4" />
+                                  حذف
+                                </Button>
+                              }
+                              onSuccess={() => {
+                                setOrganizations((prev) =>
+                                  prev.map((o) =>
+                                    o.id === org.id
+                                      ? {
+                                          ...o,
+                                          scheduledDeletionAt: new Date(),
+                                        }
+                                      : o,
+                                  ),
+                                );
+                                toast.success("تم جدولة حذف المنظمة بنجاح");
+                              }}
+                            />
+                          ))}
                       </div>
                     </div>
                   </CardContent>
@@ -377,7 +477,8 @@ const OrganizationsManagement = ({
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedOrg.workAreas.map((area, index) => (
                     <Badge key={index} variant="outline">
-                      {area}
+                      {workAreaOptions.find((option) => option.value === area)
+                        ?.label || area}
                     </Badge>
                   ))}
                 </div>

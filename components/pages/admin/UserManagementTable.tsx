@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Search } from "lucide-react";
+import { ArrowUpRight, Circle, Loader2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AdminService, AdminUserCard } from "@/services/admin";
 import { assignManager, revokeManager } from "@/actions/admin";
@@ -22,6 +22,10 @@ import { formatDate } from "@/lib/utils";
 import FilterSelect from "@/components/FilterSelect";
 import { UserRole } from "@prisma/client";
 import { useAdminUsers } from "@/hooks/useAdminUsers";
+import FreezeUserDialog from "@/components/pages/admin/users/FreezeUserDialog";
+import RemoveUserDialog from "@/components/pages/admin/users/RemoveUserDialog";
+import RestoreUserDialog from "@/components/pages/admin/users/RestoreUserDialog";
+import Link from "next/link";
 
 interface UserManagementTableProps {
   initialData: Awaited<ReturnType<typeof AdminService.getUsers>>;
@@ -112,6 +116,7 @@ export default function UserManagementTable({
   const users = initialData.data;
   const pagination = initialData.pagination;
   const canManageManagers = viewerRole === "ADMIN";
+  const canModerateUsers = viewerRole === "ADMIN" || viewerRole === "MANAGER";
 
   return (
     <div className="mx-auto max-w-7xl p-6" dir="rtl">
@@ -159,6 +164,7 @@ export default function UserManagementTable({
               <TableHead className="w-1/4">الاسم</TableHead>
               <TableHead className="w-1/4">البريد الإلكتروني</TableHead>
               <TableHead className="w-32">الدور</TableHead>
+              <TableHead className="w-28">الحالة</TableHead>
               <TableHead className="w-44">تاريخ الانضمام</TableHead>
               <TableHead className="text-start">الإجراءات</TableHead>
             </TableRow>
@@ -167,7 +173,7 @@ export default function UserManagementTable({
             {users.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="py-12 text-center text-gray-500"
                 >
                   لا توجد نتائج مطابقة
@@ -180,7 +186,14 @@ export default function UserManagementTable({
                 return (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium text-gray-900">
-                      {user.name}
+                      <Link
+                        href={`/profile/${user.id}`}
+                        target="_blank"
+                        className="flex items-center gap-0.5 hover:underline"
+                      >
+                        <ArrowUpRight className="ml-1 inline-block h-4 w-4 text-gray-500" />
+                        {user.name}
+                      </Link>
                     </TableCell>
                     <TableCell className="text-gray-600">
                       {user.email}
@@ -188,6 +201,22 @@ export default function UserManagementTable({
                     <TableCell>
                       <Badge variant={roleBadgeVariant(user.role)}>
                         {roleLabels[user.role]}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        className={`flex items-center gap-1 text-xs ${user.isActive ? "bg-secondary-100 text-primary-400" : "bg-neutrals-300 text-neutrals-600"}`}
+                      >
+                        <Circle
+                          className={`h-2 w-2 fill-current ${
+                            user.isActive ? "text-primary-400" : "text-gray-600"
+                          }`}
+                        />
+                        {user.scheduledDeletionAt
+                          ? "مجدول للحذف"
+                          : user.isActive
+                            ? "نشط"
+                            : "مجمد"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-gray-600">
@@ -206,7 +235,7 @@ export default function UserManagementTable({
                             {isRowPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              "Make Manager"
+                              "ترقية إلى مدير"
                             )}
                           </Button>
                         )}
@@ -222,13 +251,62 @@ export default function UserManagementTable({
                             {isRowPending ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              "Revoke Manager"
+                              "إلغاء صلاحية المدير"
                             )}
                           </Button>
                         )}
 
-                        {(user.role === "ADMIN" || !canManageManagers) && (
-                          <span className="text-sm text-gray-400">-</span>
+                        {canModerateUsers && (
+                          <>
+                            {user.scheduledDeletionAt && (
+                              <RestoreUserDialog
+                                userId={user.id}
+                                userName={user.name}
+                                trigger={
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                  >
+                                    استعادة الحساب
+                                  </Button>
+                                }
+                              />
+                            )}
+                            <FreezeUserDialog
+                              userId={user.id}
+                              userName={user.name}
+                              isFrozen={!user.isActive}
+                              trigger={
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  disabled={isPending || isRowPending}
+                                >
+                                  {user.isActive
+                                    ? "تجميد الحساب"
+                                    : "إلغاء التجميد"}
+                                </Button>
+                              }
+                            />
+                            {!user.scheduledDeletionAt && (
+                              <RemoveUserDialog
+                                userId={user.id}
+                                userName={user.name}
+                                trigger={
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="destructive"
+                                    disabled={isPending || isRowPending}
+                                  >
+                                    حذف الحساب
+                                  </Button>
+                                }
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                     </TableCell>

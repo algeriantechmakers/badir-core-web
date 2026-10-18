@@ -8,11 +8,17 @@ import {
   User,
   Briefcase,
   GraduationCap,
+  Flag,
 } from "lucide-react";
 import { ParticipationService } from "@/services/participations";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import InitiativeCard from "@/components/pages/InitiativeCard";
+import { Badge } from "@/components/ui/badge";
+import getSessionWithCheckProfile from "@/hooks/getSessionWithCheckProfile";
+import ReportDialog from "@/components/ReportDialog";
+import { Button } from "@/components/ui/button";
+import { ReportTarget } from "@prisma/client";
 
 export async function generateMetadata({
   params,
@@ -48,6 +54,8 @@ export default async function UserProfilePage({
   }
 
   const userData = toPlainUser(user, user.qualifications?.[0]);
+  const session = await getSessionWithCheckProfile();
+  const isOwnProfile = session?.user.id === user.id;
 
   const participations = (
     await ParticipationService.getUserParticipations(id)
@@ -67,9 +75,29 @@ export default async function UserProfilePage({
             <h1 className="text-neutrals-700 text-2xl font-bold">
               {userData.firstName} {userData.lastName}
             </h1>
+            {!user.isActive && (
+              <Badge variant="secondary" className="text-amber-800">
+                حساب موقوف
+              </Badge>
+            )}
+            {user.scheduledDeletionAt && (
+              <Badge variant="destructive">الحساب مجدول للحذف</Badge>
+            )}
             <p className="text-neutrals-500">
               {userData.qualifications?.currentJob || ""}
             </p>
+            {!isOwnProfile && (
+              <ReportDialog
+                targetType={ReportTarget.USER}
+                targetId={user.id}
+                trigger={
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <Flag className="h-4 w-4" />
+                    الإبلاغ عن المستخدم
+                  </Button>
+                }
+              />
+            )}
           </div>
         </div>
 

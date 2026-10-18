@@ -22,6 +22,33 @@ export interface Post extends Prisma.InitiativePostGetPayload<{
 }> {}
 
 export class InitiativePostsService {
+  static async remove(postId: string): Promise<{
+    authorEmail: string;
+    authorName: string;
+    postTitle: string;
+    initiativeTitle: string;
+    organizerOrgId: string | null;
+  }> {
+    const post = await prisma.initiativePost.findUnique({
+      where: { id: postId },
+      include: {
+        author: { select: { email: true, name: true } },
+        initiative: { select: { titleAr: true, organizerOrgId: true } },
+      },
+    });
+
+    if (!post) throw new Error("المنشور غير موجود");
+    if (!post.author) throw new Error("لا يمكن إخطار صاحب المنشور");
+
+    await prisma.initiativePost.delete({ where: { id: postId } });
+    return {
+      authorEmail: post.author.email,
+      authorName: post.author.name,
+      postTitle: post.title || "منشور بدون عنوان",
+      initiativeTitle: post.initiative.titleAr,
+      organizerOrgId: post.initiative.organizerOrgId,
+    };
+  }
   /**
    * Utility to check the number of attachments for an initiative.
    * @param initiativeID Initiative ID

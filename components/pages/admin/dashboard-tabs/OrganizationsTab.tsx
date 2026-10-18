@@ -30,7 +30,7 @@ import { AdminOrganizationCard } from "@/services/admin";
 import { AdminOrganizationStatusBadge } from "../../AdminStatusBadge";
 import FilterSelect from "@/components/FilterSelect";
 import SearchInput from "@/components/SearchInput";
-import { organizationTypeOptions } from "@/types/Profile";
+import { organizationTypeOptions, workAreaOptions } from "@/types/Profile";
 import { toast } from "sonner";
 import Link from "next/link";
 import AppButton from "@/components/AppButton";
@@ -214,7 +214,7 @@ export const OrganizationsTab = ({
                 type="outline"
                 url="/admin/organizations"
                 className="mx-auto"
-                border="default"
+                border="square"
                 icon={<ArrowUpLeft className="ml-1 h-4 w-4" />}
               >
                 عرض المزيد
@@ -302,7 +302,8 @@ export const OrganizationsTab = ({
                 <div className="mt-2 flex flex-wrap gap-2">
                   {selectedOrg.workAreas.map((area, index) => (
                     <Badge key={index} variant="outline">
-                      {area}
+                      {workAreaOptions.find((option) => option.value === area)
+                        ?.label || area}
                     </Badge>
                   ))}
                 </div>

@@ -1,0 +1,164 @@
+"use client";
+
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import FormInput from "@/components/form-input/FormInput";
+import AppButton from "@/components/AppButton";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { CheckboxInput } from "@/components/form-input";
+import type { AdminActionResult } from "@/actions/admin";
+
+interface AdminActionDialogProps {
+  trigger: React.ReactNode;
+  title: string;
+  optionalMessage?: boolean;
+  description: string;
+  confirmLabel: string;
+  destructive?: boolean;
+  requireConfirmation?: boolean;
+  onConfirm: (message: string) => Promise<AdminActionResult>;
+  onSuccess?: () => void;
+  isLoading?: boolean;
+}
+
+/**
+ * Reusable admin moderation dialog with a required bilingual admin message.
+ */
+export default function AdminActionDialog({
+  trigger,
+  title,
+  optionalMessage = false,
+  description,
+  confirmLabel,
+  destructive = false,
+  requireConfirmation = false,
+  onConfirm,
+  onSuccess,
+  isLoading = false,
+}: AdminActionDialogProps) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const loading = isLoading || submitting;
+  const canSubmit =
+    optionalMessage ||
+    (message.trim().length > 0 && (!requireConfirmation || confirmed));
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      setMessage("");
+      setConfirmed(false);
+    }
+  };
+
+  const handleSubmit = async (event: React.SubmitEvent) => {
+    event.preventDefault();
+
+    if (!canSubmit) {
+      toast.error("يرجى إدخال رسالة الإدارة وتأكيد الإجراء عند الحاجة");
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      const result = await onConfirm(message);
+      if (!result.actionTaken) {
+        toast.error(result.error || "حدث خطأ أثناء تنفيذ الإجراء");
+        return;
+      }
+      setOpen(false);
+      setMessage("");
+      setConfirmed(false);
+      router.refresh();
+      onSuccess?.();
+      if (!result.emailSent) {
+        toast.warning("تم تنفيذ الإجراء، لكن تعذّر إرسال البريد الإلكتروني");
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "حدث خطأ أثناء تنفيذ الإجراء",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger render={trigger as React.ReactElement}></DialogTrigger>
+      <DialogContent className="max-w-lg" dir="rtl">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <FormInput
+            type="textarea"
+            name="adminMessage"
+            label="رسالة الإدارة"
+            placeholder="اكتب رسالة واضحة للمالك..."
+            value={message}
+            onChange={(value) => setMessage(String(value))}
+            rows={4}
+            disabled={loading}
+            isOptional={optionalMessage}
+          />
+
+          {requireConfirmation && (
+            <div className="flex items-center gap-2">
+              <CheckboxInput
+                name="admin-action-confirmation"
+                value={confirmed}
+                onChange={(value) => setConfirmed(Boolean(value))}
+                disabled={loading}
+                type="checkbox"
+                label="أفهم عواقب هذا الإجراء"
+              />
+            </div>
+          )}
+
+          <DialogFooter>
+            <AppButton
+              type="outline"
+              border="square"
+              disabled={loading}
+              onClick={() => setOpen(false)}
+            >
+              إلغاء
+            </AppButton>
+            <AppButton
+              type="submit"
+              border="square"
+              disabled={!canSubmit || loading}
+              isLoading={loading}
+              className={cn(
+                destructive &&
+                  "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500",
+              )}
+              dir="rtl"
+            >
+              {confirmLabel}
+            </AppButton>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}

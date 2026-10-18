@@ -9,6 +9,7 @@ import {
   Tag,
   Handshake,
   UserCog,
+  Flag,
 } from "lucide-react";
 import Logout from "@/components/Logout";
 import { usePathname } from "next/navigation";
@@ -37,6 +38,12 @@ const navigation = [
     name: "إدارة المستخدمين",
     href: "/admin/users",
     icon: UserCog,
+  },
+  {
+    id: "reports",
+    name: "البلاغات",
+    href: "/admin/reports",
+    icon: Flag,
   },
   {
     id: "categories",

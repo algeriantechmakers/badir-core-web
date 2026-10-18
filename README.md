@@ -394,8 +394,8 @@ docker compose up -d --wait
 ### Set up database
 
 ```bash
-   npx prisma migrate dev
-   npx prisma db seed
+   pnpm prisma migrate dev
+   pnpm prisma db seed
 ```
 
 ### Set up S3_ENDPOINT
@@ -420,7 +420,7 @@ Cloudflare R2 and are unaffected.
 ### Start development server
 
 ```bash
-   npm run dev
+   pnpm dev
 ```
 
 ### Open your browser
@@ -559,7 +559,7 @@ REDIS_URL=redis://localhost:6379  # For rate limiting
 
 **Deployment Notes**:
 
-- Run `npm run db:migrate` to create `webhook_events` table
+- Run `pnpm run db:migrate` to create `webhook_events` table
 - Configure webhook in MailerLite dashboard after deployment
 - Vercel Cron activates automatically in production
 - See `WEBHOOK_QUEUE_QUICK_START.md` for complete setup guide

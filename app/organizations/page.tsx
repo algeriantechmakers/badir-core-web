@@ -14,7 +14,11 @@ export const dynamic = "force-dynamic";
 const getApprovedOrganizations = unstable_cache(
   () =>
     OrganizationService.getMany(
-      { status: OrganizationStatus.approved },
+      {
+        status: {
+          in: [OrganizationStatus.approved, OrganizationStatus.frozen],
+        },
+      },
       { page: 1, limit: 12 },
     ),
   ["organizations:approved:p1"],

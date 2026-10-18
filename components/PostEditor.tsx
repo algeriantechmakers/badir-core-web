@@ -361,7 +361,7 @@ export default function PostEditor({
             type="outline"
             onClick={onCancel}
             disabled={isPending}
-            border="default"
+            border="square"
             size="sm"
           >
             إلغاء
@@ -379,7 +379,7 @@ export default function PostEditor({
                   <Save className="h-4 w-4" />
                 )
               }
-              border="default"
+              border="square"
               size="sm"
             >
               حفظ كمسودة
@@ -389,7 +389,7 @@ export default function PostEditor({
               type="primary"
               onClick={handlePublish}
               disabled={isPending}
-              border="default"
+              border="square"
               size="sm"
               icon={
                 isPending ? (

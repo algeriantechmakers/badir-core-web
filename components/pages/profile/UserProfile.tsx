@@ -30,7 +30,10 @@ import ImageManager from "@/components/ImageManager";
 import { useRouter } from "next/navigation";
 
 interface UserProfileFormProps {
-  defaultValues: Partial<UserProfile> & { createdAt?: Date | string };
+  defaultValues: Partial<UserProfile> & {
+    createdAt?: Date | string;
+    scheduledDeletionAt?: Date | string | null;
+  };
 }
 
 export default function UserProfileForm({
@@ -181,6 +184,11 @@ export default function UserProfileForm({
           <p className="text-neutrals-500">
             {defaultValues.qualifications?.currentJob || ""}
           </p>
+          {defaultValues.scheduledDeletionAt && (
+            <span className="rounded-full bg-red-100 px-3 py-1 text-sm text-red-700">
+              الحساب مجدول للحذف
+            </span>
+          )}
         </div>
       </div>
 

@@ -628,7 +628,7 @@ export default function InitiativeForm({
             <div className="flex justify-end">
               <AppButton
                 type="primary"
-                border="default"
+                border="square"
                 onClick={() => setActiveTab("participation")}
                 size="sm"
               >
@@ -764,7 +764,7 @@ export default function InitiativeForm({
                 type="outline"
                 onClick={() => setActiveTab("basic-info")}
                 size="sm"
-                border="default"
+                border="square"
               >
                 السابق
               </AppButton>
@@ -775,7 +775,7 @@ export default function InitiativeForm({
                     type="primary"
                     onClick={() => setActiveTab("form-settings")}
                     size="sm"
-                    border="default"
+                    border="square"
                   >
                     إعداد نموذج التسجيل
                   </AppButton>
@@ -795,7 +795,7 @@ export default function InitiativeForm({
                         )
                       }
                       size="sm"
-                      border="default"
+                      border="square"
                     >
                       حفظ كمسودة
                     </AppButton>
@@ -810,7 +810,7 @@ export default function InitiativeForm({
                         )
                       }
                       size="sm"
-                      border="default"
+                      border="square"
                     >
                       {submitText}
                     </AppButton>
@@ -838,7 +838,7 @@ export default function InitiativeForm({
                 type="outline"
                 onClick={() => setActiveTab("participation")}
                 size="sm"
-                border="default"
+                border="square"
               >
                 السابق
               </AppButton>
@@ -848,7 +848,7 @@ export default function InitiativeForm({
                   type="outline-submit"
                   onClick={saveAsDraft}
                   disabled={isPending}
-                  border="default"
+                  border="square"
                   icon={
                     isPending ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -865,7 +865,7 @@ export default function InitiativeForm({
                   type="submit"
                   onClick={saveAndPublish}
                   disabled={isPending}
-                  border="default"
+                  border="square"
                   size="sm"
                   icon={
                     isPending && <Loader2 className="h-4 w-4 animate-spin" />
