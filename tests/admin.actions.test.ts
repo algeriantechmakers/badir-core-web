@@ -89,6 +89,7 @@ import {
   unfreezeOrganization,
   unfreezeUser,
 } from "@/actions/admin";
+import { AdminAction, can } from "@/lib/permissions";
 
 describe("createReport action", () => {
   it("returns an authentication error without creating a report", async () => {
@@ -154,7 +155,7 @@ describe("moderation actions", () => {
 
   beforeEach(() => {
     enforceMock.mockImplementation((role: string, action: string) => {
-      if (role === "USER" && action !== "create:report") {
+      if (!can(role, action as AdminAction)) {
         throw new Error("Forbidden");
       }
     });
@@ -202,6 +203,44 @@ describe("moderation actions", () => {
   ])("%s rejects an unauthorized role", async (_name, action) => {
     getSession.mockResolvedValue(wrongRole);
     await expect(action()).resolves.toMatchObject({ actionTaken: false });
+  });
+
+  const manager = { user: { id: "manager-1", role: "MANAGER" } };
+
+  it.each([
+    ["freezeOrganization", () => freezeOrganization("org-1", "message")],
+    ["removeOrganization", () => removeOrganization("org-1", "message")],
+    ["restoreOrganization", () => restoreOrganization("org-1")],
+  ])("%s rejects a MANAGER on ADMIN-only actions", async (_name, action) => {
+    getSession.mockResolvedValue(manager);
+    await expect(action()).resolves.toMatchObject({ actionTaken: false });
+  });
+
+  it.each([
+    ["freezeUser", () => freezeUser("user-2", "message")],
+    ["unfreezeUser", () => unfreezeUser("user-2", "message")],
+    ["removeUser", () => removeUser("user-2", "message")],
+    ["restoreUser", () => restoreUser("user-2")],
+  ])("%s rejects modifications to ADMIN accounts", async (_name, action) => {
+    getSession.mockResolvedValue(admin);
+    userService.getUser.mockResolvedValue({ ...user, role: "ADMIN" });
+    await expect(action()).resolves.toEqual({
+      actionTaken: false,
+      emailSent: false,
+      error: "لا يمكن تعديل حسابات المسؤولين",
+    });
+  });
+
+  it("rejects a MANAGER removing a post from an individual initiative", async () => {
+    getSession.mockResolvedValue(manager);
+    initiativePost.findUnique.mockResolvedValue({
+      initiative: { organizerOrgId: null },
+    });
+    await expect(removePost("post-1", "message")).resolves.toEqual({
+      actionTaken: false,
+      emailSent: false,
+      error: "لا يمكن للمدير إزالة منشور من مبادرة فردية",
+    });
   });
 
   it("freezes and unfreezes users", async () => {
@@ -292,6 +331,14 @@ describe("moderation actions", () => {
     });
     sendMail.mockRejectedValue(new Error("mail failed"));
     await expect(freezeUser("user-2", "message")).resolves.toEqual({
+      actionTaken: true,
+      emailSent: false,
+    });
+    await expect(removeUser("user-2", "message")).resolves.toEqual({
+      actionTaken: true,
+      emailSent: false,
+    });
+    await expect(removeOrganization("org-1", "message")).resolves.toEqual({
       actionTaken: true,
       emailSent: false,
     });

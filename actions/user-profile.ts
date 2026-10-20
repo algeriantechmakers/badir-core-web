@@ -21,6 +21,7 @@ import { encodeGeohash } from "@/lib/geohash";
 import { SIGNUP_CONSENT_VERSION } from "@/lib/signup-consent-config";
 import { redirect } from "next/navigation";
 import { logoutAction } from "./logout";
+import { sanitizePlainText } from "@/lib/santitize-server";
 
 export async function updateUserProfileAction(
   data: UserProfile,
@@ -41,6 +42,12 @@ export async function updateUserProfileAction(
 
     // Fetch current data for dirty check
     const currentUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!currentUser) {
+      return {
+        success: false,
+        error: "المستخدم غير موجود",
+      };
+    }
     const currentQualification = await prisma.userQualification.findFirst({
       where: { userId },
     });
@@ -87,18 +94,29 @@ export async function updateUserProfileAction(
     }
 
     validateUserProfile(data);
+
+    const sanitizedFirstName = sanitizePlainText(data.firstName);
+    const sanitizedLastName = sanitizePlainText(data.lastName);
+    const sanitizedBio = data.bio ? sanitizePlainText(data.bio) : null;
+    const sanitizedSpecification = data.qualifications
+      ? sanitizePlainText(data.qualifications.specification)
+      : "";
+    const sanitizedCurrentJob = data.qualifications?.currentJob
+      ? sanitizePlainText(data.qualifications.currentJob)
+      : "";
+
     // Update user record
     await prisma.user.update({
       where: { id: userId },
       data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
+        firstName: sanitizedFirstName,
+        lastName: sanitizedLastName,
         sex: normalizedSex,
         phone: formattedPhone ?? null,
         city: data.city,
         state: data.state,
         country: data.country,
-        bio: data.bio || null,
+        bio: sanitizedBio,
         geohash: geohash ?? undefined,
         updatedAt: new Date(),
       },
@@ -114,9 +132,9 @@ export async function updateUserProfileAction(
         await prisma.userQualification.update({
           where: { id: existingQualification.id },
           data: {
-            specification: data.qualifications.specification,
+            specification: sanitizedSpecification,
             educationalLevel: data.qualifications.educationalLevel,
-            currentJob: data.qualifications.currentJob || "",
+            currentJob: sanitizedCurrentJob,
             updatedAt: new Date(),
           },
         });
@@ -124,9 +142,9 @@ export async function updateUserProfileAction(
         await prisma.userQualification.create({
           data: {
             userId,
-            specification: data.qualifications.specification,
+            specification: sanitizedSpecification,
             educationalLevel: data.qualifications.educationalLevel,
-            currentJob: data.qualifications.currentJob || "",
+            currentJob: sanitizedCurrentJob,
           },
         });
       }
@@ -210,6 +228,16 @@ export async function completeProfileAction(
         ? encodeGeohash(validatedData.latitude, validatedData.longitude)
         : null;
 
+    const sanitizedBio = validatedData.bio
+      ? sanitizePlainText(validatedData.bio)
+      : validatedData.bio;
+    const sanitizedSpecification = sanitizePlainText(
+      validatedData.specification,
+    );
+    const sanitizedCurrentJob = validatedData.currentJob
+      ? sanitizePlainText(validatedData.currentJob)
+      : "";
+
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
@@ -223,7 +251,7 @@ export async function completeProfileAction(
         geohash,
 
         // Bio and user type
-        bio: validatedData.bio,
+        bio: sanitizedBio,
         userType: validatedData.userType,
 
         // Profile completion flag
@@ -241,9 +269,9 @@ export async function completeProfileAction(
       await prisma.userQualification.update({
         where: { id: existingQualification.id },
         data: {
-          specification: validatedData.specification,
+          specification: sanitizedSpecification,
           educationalLevel: finalEducationalLevel,
-          currentJob: validatedData.currentJob || "",
+          currentJob: sanitizedCurrentJob,
           updatedAt: new Date(),
         },
       });
@@ -251,9 +279,9 @@ export async function completeProfileAction(
       await prisma.userQualification.create({
         data: {
           userId: session.user.id,
-          specification: validatedData.specification,
+          specification: sanitizedSpecification,
           educationalLevel: finalEducationalLevel,
-          currentJob: validatedData.currentJob || "",
+          currentJob: sanitizedCurrentJob,
         },
       });
     }
@@ -337,6 +365,17 @@ export async function privacyPolicyConsentAction(): Promise<
       };
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { consentGiven: true },
+    });
+    if (user?.consentGiven) {
+      return {
+        success: true,
+        message: "لقد سبق وقدمت موافقتك على سياسة الخصوصية",
+      };
+    }
+
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
@@ -369,6 +408,13 @@ export async function deleteUserAccountAction(): Promise<
     return {
       success: false,
       error: "يجب تسجيل الدخول لتحديث بياناتك الشخصية",
+    };
+  }
+
+  if (session.user.role === "ADMIN") {
+    return {
+      success: false,
+      error: "لا يمكن حذف حساب المسؤول",
     };
   }
 
