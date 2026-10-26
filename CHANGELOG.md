@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/algeriantechmakers/badir-core-web/compare/1.6.0...1.6.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* restore docker-compose.yml configuration ([c2b5f4c](https://github.com/algeriantechmakers/badir-core-web/commit/c2b5f4cc25e4009ee2857ebf6bf4d272e0f2d37e))
+
 # [1.6.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.5.0...1.6.0) (2026-10-18)
 
 
