@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.6.0...1.7.0) (2026-10-26)
+
+
+### Features
+
+* add pgadmin and restore rustfs config ([965f9b6](https://github.com/algeriantechmakers/badir-core-web/commit/965f9b69a38764bdede5b1e011d986a2563117c0))
+
 # [1.6.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.5.0...1.6.0) (2026-10-18)
 
 
