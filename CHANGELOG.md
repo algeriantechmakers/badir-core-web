@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/algeriantechmakers/badir-core-web/compare/1.7.0...1.7.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* docker migrator image tags in release pipeline ([58b37bf](https://github.com/algeriantechmakers/badir-core-web/commit/58b37bfa3816015172ce480d0e8ed9807437f227))
+
 # [1.7.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.6.0...1.7.0) (2026-10-26)
 
 
