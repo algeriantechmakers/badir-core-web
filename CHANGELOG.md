@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.6.0...1.7.0) (2026-10-26)
+
+
+### Features
+
+* add pgAdmin service ([7220c4c](https://github.com/algeriantechmakers/badir-core-web/commit/7220c4c4410bd7679b3ca3550a210ba7a9c177ed))
+
 # [1.6.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.5.0...1.6.0) (2026-10-18)
 
 
