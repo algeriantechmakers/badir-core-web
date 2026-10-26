@@ -66,7 +66,7 @@ services:
       start_period: 10s
 
   pgadmin:
-    image: dpage/pgadmin4:9.8
+    image: dpage/pgadmin4:9.18
     container_name: pgadmin
     restart: unless-stopped
     environment:
