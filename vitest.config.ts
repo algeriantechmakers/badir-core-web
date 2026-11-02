@@ -18,6 +18,7 @@ export default defineConfig({
         "lib/**/*.ts",
         "services/**/*.ts",
         "schemas/**/*.ts",
+        "app/api/**/*.ts",
       ],
       exclude: ["**/*.d.ts"],
     },
