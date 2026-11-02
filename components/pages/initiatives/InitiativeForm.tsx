@@ -192,10 +192,10 @@ export default function InitiativeForm({
           result = await createInitiativeAction(sanitizedData);
         }
         if (result.success) {
-          toast.success(result.message || "تم إنشاء المبادرة بنجاح");
+          toast.success(result.message || "تم إنشاء المبادرة أو حفظها بنجاح");
           router.replace(`/initiatives/${result.data?.initiativeId}`);
         } else {
-          toast.error(result.error || "حدث خطأ أثناء إنشاء المبادرة");
+          toast.error(result.error || "حدث خطأ أثناء إنشاء أو حفظ المبادرة");
         }
       });
     } catch (error) {

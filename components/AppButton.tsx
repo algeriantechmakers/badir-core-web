@@ -57,7 +57,7 @@ function AppButton({
   return (
     <ShadcnButton
       className={cn(
-        "flex-center cursor-pointer font-medium transition-all",
+        "flex-center relative cursor-pointer font-medium transition-all",
         sizeClasses[size],
         (type === "primary" || type === "submit") &&
           "bg-primary-500 hover:bg-primary-400 text-white",
@@ -67,7 +67,7 @@ function AppButton({
         border === "square" && "rounded-md",
         className,
       )}
-      onClick={onClick}
+      onClick={url ? undefined : onClick}
       disabled={disabled}
       type={
         type === "submit" || type === "outline-submit" ? "submit" : "button"
@@ -75,7 +75,14 @@ function AppButton({
       dir={dir}
     >
       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : icon}{" "}
-      {url ? <Link href={url}>{children}</Link> : children}
+      {children}
+      {url && (
+        <Link
+          href={url}
+          className="absolute inset-0 z-10"
+          aria-label={typeof children === "string" ? children : undefined}
+        />
+      )}
     </ShadcnButton>
   );
 }
