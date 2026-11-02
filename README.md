@@ -92,6 +92,8 @@ erDiagram
     User ||--o{ PlatformRating : gives
     User ||--o{ UserQualification : has
     User ||--o{ AuditLog : "performs"
+    User ||--o{ Report : "files"
+    User ||--o{ Report : "resolves"
     Organization ||--o{ Initiative : "organizes as org"
     Organization ||--o{ SupportRequest : requests
     Initiative ||--o{ InitiativeParticipant : has
@@ -122,6 +124,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
         datetime lastActiveAt
+        datetime scheduledDeletionAt
         boolean profileCompleted
         boolean newsletterSubscribed
         datetime newsletterSubscribedAt
@@ -146,11 +149,13 @@ erDiagram
         string country
         datetime createdAt
         datetime updatedAt
+        datetime scheduledDeletionAt
         date foundingDate
         string headquarters
         string identificationCard
         int membersCount
         string officialLicense
+        boolean isVerified
         string organizationType
         string previousInitiatives
         string shortName
@@ -247,6 +252,19 @@ erDiagram
         string imageUrl UK
         datetime createdAt
         datetime updatedAt
+    }
+
+    Report {
+        string id PK
+        string reporterId FK
+        enum targetType
+        string targetId
+        enum reason
+        string customReason
+        enum status
+        string resolvedById FK
+        datetime resolvedAt
+        datetime createdAt
     }
 
     SupportRequest {
