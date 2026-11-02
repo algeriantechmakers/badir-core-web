@@ -1,3 +1,11 @@
+## [1.7.2](https://github.com/algeriantechmakers/badir-core-web/compare/1.7.1...1.7.2) (2026-11-02)
+
+
+### Bug Fixes
+
+* add sanitization, user guards, and tighten admin action tests ([f29b029](https://github.com/algeriantechmakers/badir-core-web/commit/f29b029c0f1727363a05c5456566b6ae78af4a24))
+* docker migrator image tags in pr pipeline ([07fe65c](https://github.com/algeriantechmakers/badir-core-web/commit/07fe65cad68938844f5bdd4af0bf9cb31704cfee))
+
 ## [1.7.1](https://github.com/algeriantechmakers/badir-core-web/compare/1.7.0...1.7.1) (2026-10-26)
 
 
