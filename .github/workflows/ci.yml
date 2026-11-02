@@ -138,9 +138,7 @@ jobs:
           platforms: linux/amd64
           push: true
           provenance: false
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ needs.release.outputs.version }}-migrator
-            ${{ env.REGISTRY }}/${{ env.IMAGE }}:latest-migrator
+          tags: ${{ steps.meta.outputs.tags }}-migrator
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
