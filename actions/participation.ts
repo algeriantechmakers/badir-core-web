@@ -64,8 +64,8 @@ export async function joinInitiativeAction(
 
     // Check if user is already participating
     const existingParticipation = await ParticipationService.getByIds(
-      params.initiativeId,
       session.user.id,
+      params.initiativeId,
     );
 
     if (existingParticipation) {
