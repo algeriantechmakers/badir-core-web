@@ -12,6 +12,10 @@ const getSessionWithCheckProfile: () => Promise<Session | null> = async () => {
     headers: await headers(),
   });
 
+  if (session?.user.emailVerified === false) {
+    redirect("/verify-email", RedirectType.replace);
+  }
+
   if (session && !session.user.profileCompleted) {
     if (session.user.userType === UserType.organization) {
       redirect("/complete-profile/organization", RedirectType.replace);
