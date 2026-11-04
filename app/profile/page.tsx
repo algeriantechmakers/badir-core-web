@@ -25,18 +25,7 @@ export default async function Page() {
         return <div>منظمتك غير موجودة أو لم يتم إعدادها بشكل صحيح</div>;
       }
 
-      if (organizationData.status === OrganizationStatus.pending) {
-        return (
-          <div
-            className="bg-neutrals-100 flex min-h-screen items-center justify-center p-6"
-            dir="rtl"
-          >
-            <p>
-              منظمتك بحاجة إلى الموافقة قبل أن تتمكن من الوصول إلى هذه الصفحة.
-            </p>
-          </div>
-        );
-      } else if (organizationData.status === OrganizationStatus.rejected) {
+      if (organizationData.status === OrganizationStatus.rejected) {
         return (
           <div
             className="bg-neutrals-100 flex min-h-screen items-center justify-center p-6"

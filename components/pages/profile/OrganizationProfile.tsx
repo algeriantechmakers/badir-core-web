@@ -20,6 +20,7 @@ import {
   Users,
   ExternalLink,
   Lock,
+  X,
 } from "lucide-react";
 import AppButton from "@/components/AppButton";
 import {
@@ -36,6 +37,7 @@ import { countryList } from "@/data/statics";
 import ImageManager from "@/components/ImageManager";
 import { useRouter } from "next/navigation";
 import { OrganizationStatus } from "@prisma/client";
+import { Alert, AlertAction, AlertDescription } from "@/components/ui/alert";
 
 interface OrganizationProfileFormProps {
   defaultValues: Partial<OrganizationProfile> & {
@@ -51,7 +53,10 @@ export default function OrganizationProfileForm({
 }: OrganizationProfileFormProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const disabled = !isUpdating;
+  const isPendingOrganization =
+    defaultValues.status === OrganizationStatus.pending;
   const [isPending, startTransition] = useTransition();
+  const [showPendingNotice, setShowPendingNotice] = useState(true);
   const [orgLogo, setOrgLogo] = useState<string | null>(null);
 
   const router = useRouter();
@@ -184,6 +189,24 @@ export default function OrganizationProfileForm({
 
   return (
     <>
+      {isPendingOrganization && showPendingNotice && (
+        <Alert className="mb-6 border-amber-200 bg-amber-50 text-amber-900">
+          <AlertDescription>
+            منظمتك قيد المراجعة من قِبَل الإدارة. يمكنك تعديل النص التعريفي ورقم
+            الهاتف والصورة في هذه المرحلة.
+          </AlertDescription>
+          <AlertAction>
+            <button
+              type="button"
+              onClick={() => setShowPendingNotice(false)}
+              className="text-amber-900/70 hover:text-amber-900"
+              aria-label="إغلاق التنبيه"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </AlertAction>
+        </Alert>
+      )}
       <div className="flex-center mb-4 gap-4">
         <ImageManager
           currentImageUrl={orgLogo || null}
@@ -329,7 +352,7 @@ export default function OrganizationProfileForm({
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   error={errors.name?.message}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -349,7 +372,7 @@ export default function OrganizationProfileForm({
                   onBlur={field.onBlur}
                   error={errors.shortName?.message}
                   isOptional
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -368,7 +391,7 @@ export default function OrganizationProfileForm({
                   onChange={field.onChange}
                   error={fieldState.error?.message}
                   rtl={true}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -387,7 +410,7 @@ export default function OrganizationProfileForm({
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   error={errors.userRole?.message}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -407,7 +430,7 @@ export default function OrganizationProfileForm({
                   onChange={field.onChange}
                   error={fieldState.error?.message}
                   rtl={true}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -428,7 +451,7 @@ export default function OrganizationProfileForm({
                   onBlur={field.onBlur}
                   error={errors.description?.message}
                   rtl={true}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? !isUpdating : disabled}
                 />
               )}
             />
@@ -450,7 +473,7 @@ export default function OrganizationProfileForm({
                   error={errors.previousInitiatives?.message}
                   rtl={true}
                   isOptional
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -478,7 +501,7 @@ export default function OrganizationProfileForm({
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   error={errors.contactEmail?.message}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -511,7 +534,7 @@ export default function OrganizationProfileForm({
                         setValue("contactPhoneCountryCode", code)
                       }
                       isOptional
-                      disabled={disabled}
+                      disabled={isPendingOrganization ? !isUpdating : disabled}
                     />
                   );
                 }}
@@ -540,7 +563,7 @@ export default function OrganizationProfileForm({
                   }
                   error={fieldState.error?.message}
                   rtl={true}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -563,7 +586,7 @@ export default function OrganizationProfileForm({
                   }}
                   error={fieldState.error?.message}
                   rtl={true}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -592,7 +615,7 @@ export default function OrganizationProfileForm({
                   onChange={onChange}
                   onBlur={onBlur}
                   error={errors.country?.message}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -611,7 +634,7 @@ export default function OrganizationProfileForm({
                   onChange={field.onChange}
                   onBlur={field.onBlur}
                   error={errors.state?.message}
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -631,7 +654,7 @@ export default function OrganizationProfileForm({
                   onBlur={field.onBlur}
                   error={errors.city?.message}
                   isOptional
-                  disabled={disabled}
+                  disabled={isPendingOrganization ? true : disabled}
                 />
               )}
             />
@@ -704,7 +727,9 @@ export default function OrganizationProfileForm({
                     onBlur={field.onBlur}
                     rtl={true}
                     isOptional={!isLicensed}
-                    disabled={disabled || !isLicensed}
+                    disabled={
+                      isPendingOrganization ? true : disabled || !isLicensed
+                    }
                   />
                   {field.value && (
                     <a
