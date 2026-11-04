@@ -80,7 +80,7 @@ export default async function OrganizationProfilePage({
         <div className="flex-center mb-8 gap-4">
           <Avatar className="h-24 w-24">
             <AvatarImage src={orgData.logo || ""} alt={orgData.name} />
-            <AvatarFallback className="border-primary-500 text-primary-500 border-2 font-semibold">
+            <AvatarFallback className="border-primary-500 text-primary-500 bg-secondary-100 border-2 font-semibold">
               <Building className="h-8 w-8" />
             </AvatarFallback>
           </Avatar>

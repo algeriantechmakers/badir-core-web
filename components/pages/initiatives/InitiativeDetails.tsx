@@ -199,7 +199,7 @@ export default function InitiativeDetails({
 
         <Link href={organizerProfileLink}>
           <div className="hover:bg-neutrals-200 flex items-center gap-4 rounded-lg p-3 transition-colors">
-            <div className="border-neutrals-300 relative h-12 w-12 overflow-hidden rounded-full border">
+            <div className="bg-secondary-100 border-neutrals-300 relative h-12 w-12 overflow-hidden rounded-full border">
               {organizerImage ? (
                 <Image
                   src={organizerImage}
