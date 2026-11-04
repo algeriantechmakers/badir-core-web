@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import AppButton from "@/components/AppButton";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import NewsletterSignup from "@/components/pages/NewsletterSignup";
 
-export default function Footer() {
+export default async function Footer() {
   const currentYear = new Date().getFullYear();
+  const session = await auth.api.getSession({ headers: await headers() });
 
   return (
     <footer dir="rtl">
@@ -160,15 +163,7 @@ export default function Footer() {
               احصل على آخر المواضيع والأخبار في بريدك
             </p>
 
-            <AppButton
-              type="primary"
-              border="rounded"
-              size="md"
-              className="w-full overflow-hidden px-0.5 text-ellipsis whitespace-nowrap"
-              url="/profile"
-            >
-              اشترك في النشرة البريدية
-            </AppButton>
+            <NewsletterSignup initialEmail={session?.user.email} />
           </div>
         </div>
 

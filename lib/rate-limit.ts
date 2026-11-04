@@ -19,7 +19,23 @@ import {
 const globalForRedis = globalThis as unknown as {
   rateLimitRedis?: Promise<Redis>;
   rateLimitRedisDownUntil?: number;
+  newsletterRedis?: Redis;
 };
+
+export function getNewsletterRedis() {
+  if (!globalForRedis.newsletterRedis) {
+    const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379", {
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: false,
+    });
+    redis.on("error", (error: Error) => {
+      console.error("Newsletter Redis connection error:", error.message);
+    });
+    globalForRedis.newsletterRedis = redis;
+  }
+
+  return globalForRedis.newsletterRedis;
+}
 
 /**
  * How long to stop dialling Redis after a failed connection attempt.
