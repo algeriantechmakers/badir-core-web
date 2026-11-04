@@ -221,7 +221,7 @@ export default function InitiativeCard(props: InitiativeCardProps) {
 
   // ------------ Browse mode ------------
   if (props.mode === "browse") {
-    const { initiative, userId } = props;
+    const { initiative } = props;
     const {
       id,
       category,
@@ -245,13 +245,17 @@ export default function InitiativeCard(props: InitiativeCardProps) {
       !maxParticipants || currentParticipants < maxParticipants;
     const isOngoing = now >= new Date(startDate) && now <= new Date(endDate);
     const isCompleted = now > new Date(endDate);
+    const isRegistrationClosed =
+      isDeadlinePassed ||
+      !isAvailable ||
+      initiative.status !== InitiativeStatus.published;
 
     return (
       <Card
         className={`bg-neutrals-100 border-secondary-700 relative mx-auto h-full w-full max-w-2xl rounded-xl border-2 p-4 shadow-md md:p-6 ${className ?? ""}`}
         dir="rtl"
       >
-        <CardContent className="flex-center-column h-full justify-between gap-2 p-0.5">
+        <CardContent className="flex-center-column h-full justify-between gap-4 p-0.5">
           {registrationDeadline && (
             <TooltipProvider>
               <Tooltip>
@@ -270,7 +274,7 @@ export default function InitiativeCard(props: InitiativeCardProps) {
           )}
 
           {/* Badges row */}
-          <div className="mt-2 flex flex-wrap items-start justify-between gap-2 sm:mt-1">
+          <div className="mt-2 flex w-full flex-wrap items-start justify-between gap-2 sm:mt-1">
             <div className="flex flex-wrap items-center gap-2">
               <CategoryBadge
                 nameAr={category.nameAr}
@@ -289,27 +293,34 @@ export default function InitiativeCard(props: InitiativeCardProps) {
           </div>
 
           {/* Title + Date */}
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-start">
-            <h3 className="text-neutrals-700 flex-1 text-lg leading-tight font-bold md:text-xl lg:text-2xl">
+          <div className="flex w-full flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <Link
+              href={`/initiatives/${id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-neutrals-700 flex-1 text-lg leading-tight font-bold hover:underline md:text-xl lg:text-2xl"
+            >
               {titleAr}
-            </h3>
+            </Link>
             <DateRange startDate={startDate} endDate={endDate} />
           </div>
 
           {/* Description */}
           {shortDescriptionAr && (
-            <p className="text-neutrals-500 text-sm leading-relaxed md:text-base">
+            <p className="text-neutrals-500 w-full text-sm leading-relaxed md:text-base">
               {shortDescriptionAr}
             </p>
           )}
 
           {/* Location + participants */}
-          <LocationAndCount
-            city={city}
-            isOnline={isOnline}
-            currentParticipants={currentParticipants}
-            maxParticipants={maxParticipants}
-          />
+          <div className="w-full">
+            <LocationAndCount
+              city={city}
+              isOnline={isOnline}
+              currentParticipants={currentParticipants}
+              maxParticipants={maxParticipants}
+            />
+          </div>
 
           {initiative.status === InitiativeStatus.completed && (
             <Ratings
@@ -321,7 +332,7 @@ export default function InitiativeCard(props: InitiativeCardProps) {
           )}
 
           {/* Organizer */}
-          <div className="text-neutrals-500 text-sm md:text-base">
+          <div className="text-neutrals-500 w-full text-sm md:text-base">
             نُظِّمت بواسطة:{" "}
             <span className="text-neutrals-600 hover:text-primary-500 font-medium hover:underline">
               <Link
@@ -344,23 +355,16 @@ export default function InitiativeCard(props: InitiativeCardProps) {
           </div>
 
           {/* CTA */}
-          <div className="flex justify-center pt-4">
+          <div className="flex w-full justify-end pt-2">
             <AppButton
               type="outline"
               border="rounded"
               size="md"
               icon={<ArrowUpLeft />}
-              className="w-full sm:w-auto"
+              className={`w-full sm:w-auto ${
+                isRegistrationClosed ? "opacity-50 grayscale" : ""
+              }`}
               url={`/initiatives/${id}`}
-              disabled={
-                !isAvailable ||
-                isCompleted ||
-                !(
-                  (userId === organizer.id &&
-                    initiative.status !== "cancelled") ||
-                  initiative.status === "published"
-                )
-              }
             >
               انضم للمبادرة
             </AppButton>

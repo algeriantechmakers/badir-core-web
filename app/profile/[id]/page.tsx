@@ -76,7 +76,7 @@ export default async function UserProfilePage({
               {userData.firstName} {userData.lastName}
             </h1>
             {!user.isActive && (
-              <Badge variant="secondary" className="text-amber-800">
+              <Badge variant="outline" className="text-red-600">
                 حساب موقوف
               </Badge>
             )}

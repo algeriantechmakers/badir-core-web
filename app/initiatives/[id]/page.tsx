@@ -121,16 +121,17 @@ export default async function InitiativeDetailsPage({
   const isClosedForRating = initiative.status === InitiativeStatus.completed;
   const canRate = isClosedForRating && isApprovedParticipant;
 
-  const reviews = isManager
-    ? (await InitiativeService.getInitiativeRatings(initiative.id)).map(
-        (r) => ({
-          id: r.id,
-          rating: r.rating !== null ? Number(r.rating) : null,
-          comment: r.comment,
-          user: r.user,
-        }),
-      )
-    : [];
+  const reviews =
+    isClosedForRating || isManager
+      ? (await InitiativeService.getInitiativeRatings(initiative.id)).map(
+          (r) => ({
+            id: r.id,
+            rating: r.rating !== null ? Number(r.rating) : null,
+            comment: r.comment,
+            user: r.user,
+          }),
+        )
+      : [];
 
   const existingRating =
     canRate && session?.user?.id
@@ -187,10 +188,6 @@ export default async function InitiativeDetailsPage({
     }
   }
 
-  if (isClosedForRating && !isManager && !isApprovedParticipant) {
-    notFound();
-  }
-
   if (canViewPosts) {
     return (
       <div className="bg-neutrals-100 min-h-screen" dir="rtl">
@@ -209,7 +206,7 @@ export default async function InitiativeDetailsPage({
               <TabsTrigger value="posts">المنشورات</TabsTrigger>
               {isManager && <TabsTrigger value="members">الأعضاء</TabsTrigger>}
               {isManager && <TabsTrigger value="requests">الطلبات</TabsTrigger>}
-              {isManager && (
+              {(isManager || isClosedForRating) && (
                 <TabsTrigger value="reviews">التقييمات</TabsTrigger>
               )}
               {!isManager && canWritePosts && (
@@ -241,7 +238,7 @@ export default async function InitiativeDetailsPage({
               </TabsContent>
             )}
 
-            {isManager && (
+            {(isManager || isClosedForRating) && (
               <TabsContent value="reviews">
                 <InitiativeReviewsPanel reviews={reviews} />
               </TabsContent>
@@ -332,6 +329,24 @@ export default async function InitiativeDetailsPage({
 
         {/* Initiative Details */}
         <InitiativeDetails initiative={initiative} />
+
+        {isClosedForRating && (
+          <div className="bg-neutrals-100 mt-8 rounded-lg p-6 text-center">
+            <p className="text-neutrals-700 font-semibold">
+              هذه المبادرة مكتملة
+            </p>
+          </div>
+        )}
+
+        {/* Initiative Ratings */}
+        {isClosedForRating && (
+          <div className="mt-8">
+            <h2 className="text-primary-600 mb-4 text-xl font-semibold">
+              التقييمات
+            </h2>
+            <InitiativeReviewsPanel reviews={reviews} />
+          </div>
+        )}
 
         {/* Join Form Section */}
         {canJoin && (
