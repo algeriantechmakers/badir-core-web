@@ -419,7 +419,7 @@ export default async function InitiativeDetailsPage({
                     : userParticipation.participantRole ===
                         ParticipantRole.helper
                       ? "مساعد"
-                      : "منظم"}
+                      : "مُنظِّم"}
                 </span>
               </p>
               <p className="text-neutrals-700">

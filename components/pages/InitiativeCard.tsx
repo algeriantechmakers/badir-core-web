@@ -98,7 +98,7 @@ function ParticipationStatusBadgeInline({
   if (status === ParticipationStatus.approved) {
     const label =
       role === ParticipantRole.manager
-        ? "منظم"
+        ? "مُنظِّم"
         : role === ParticipantRole.helper
           ? "مساعد"
           : "مشارك";

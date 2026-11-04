@@ -238,7 +238,7 @@ export default function InitiativesList({
                 value={filters.organizerType || "all"}
                 onChange={(value) => handleFilterChange("organizerType", value)}
                 options={organizerTypeOptions}
-                placeholder="نوع المنظم"
+                placeholder="نوع المُنظِّم"
               />
             </div>
 

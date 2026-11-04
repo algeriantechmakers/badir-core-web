@@ -192,7 +192,13 @@ export default function InitiativeForm({
           result = await createInitiativeAction(sanitizedData);
         }
         if (result.success) {
-          toast.success(result.message || "تم إنشاء المبادرة أو حفظها بنجاح");
+          if ("coverImageFailed" in result && result.coverImageFailed) {
+            toast.warning(
+              "تم إنشاء المبادرة، لكن تعذّر رفع صورة الغلاف. يمكنك إعادة رفعها لاحقاً من صفحة تعديل المبادرة.",
+            );
+          } else {
+            toast.success(result.message || "تم إنشاء المبادرة أو حفظها بنجاح");
+          }
           router.replace(`/initiatives/${result.data?.initiativeId}`);
         } else {
           toast.error(result.error || "حدث خطأ أثناء إنشاء أو حفظ المبادرة");
