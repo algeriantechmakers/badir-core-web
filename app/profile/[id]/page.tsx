@@ -19,6 +19,7 @@ import getSessionWithCheckProfile from "@/hooks/getSessionWithCheckProfile";
 import ReportDialog from "@/components/ReportDialog";
 import { Button } from "@/components/ui/button";
 import { ReportTarget } from "@prisma/client";
+import BackButton from "@/components/BackButton";
 
 export async function generateMetadata({
   params,
@@ -64,6 +65,9 @@ export default async function UserProfilePage({
   return (
     <div className="bg-neutrals-100 min-h-screen p-6" dir="rtl">
       <div className="border-neutrals-300 mx-auto max-w-5xl rounded-lg border-2 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex justify-end">
+          <BackButton />
+        </div>
         <div className="flex-center mb-8 gap-4">
           <Avatar className="h-24 w-24">
             <AvatarImage src={userData.image || ""} alt={userData.firstName} />
