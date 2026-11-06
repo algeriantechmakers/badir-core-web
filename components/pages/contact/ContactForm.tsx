@@ -207,6 +207,17 @@ export default function ContactForm() {
               {isSubmitting ? "جاري الإرسال..." : "إرســال"}
             </AppButton>
           </div>
+          <div className="flex-center-column text-center">
+            <span className="text-neutrals-500 text-paragraph-md mt-1">
+              أو من خلال
+            </span>
+            <a
+              href={`mailto:${emailConfig.contactEmail}`}
+              className="text-primary-500 text-paragraph-md hover:text-primary-600 font-medium underline decoration-2 underline-offset-4 transition-colors"
+            >
+              {emailConfig.contactEmail}
+            </a>
+          </div>
         </form>
       </div>
     </div>
