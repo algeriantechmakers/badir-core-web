@@ -1,3 +1,20 @@
+# [1.8.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.7.2...1.8.0) (2026-11-06)
+
+
+### Bug Fixes
+
+* added logo croping and bg fallback for no bg logos + added missing env vars for rustfs ([901731f](https://github.com/algeriantechmakers/badir-core-web/commit/901731fb81fd536812dfb0bb7a4aed9aa7b2e937))
+* added missing return buttonss ([bf88424](https://github.com/algeriantechmakers/badir-core-web/commit/bf8842417475914b8c9661b9bd480f01cf23448e))
+* correct way of fetching initiative participation by user id + its unit tests ([2961a18](https://github.com/algeriantechmakers/badir-core-web/commit/2961a18d51f74e336ca41532ecbccc5485e3ce14))
+* ideompotency while creating an initiative in case of failed image upload ([9f3efba](https://github.com/algeriantechmakers/badir-core-web/commit/9f3efbadc077307fc83bc1fe50b0f95ab0c8be12))
+
+
+### Features
+
+* added newsletter for not registered guest users ([bc1f564](https://github.com/algeriantechmakers/badir-core-web/commit/bc1f564dd724bc397d124ae410c3b2bcfb9b782b))
+* added the missed email verification afetr signup ([78e25b2](https://github.com/algeriantechmakers/badir-core-web/commit/78e25b2127f5e9432207b462b7eaa06bb3cee4cc))
+* allowed org owner to change some data during pending period ([b850ec6](https://github.com/algeriantechmakers/badir-core-web/commit/b850ec695f2ea7d54335595d570cd882e34dde64))
+
 ## [1.7.2](https://github.com/algeriantechmakers/badir-core-web/compare/1.7.1...1.7.2) (2026-11-02)
 
 
