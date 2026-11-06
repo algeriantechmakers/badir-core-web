@@ -557,7 +557,7 @@ const OrganizationDetails = ({
                 شعار المنظمة
               </Label>
               {organization.logo ? (
-                <div className="relative aspect-square w-full overflow-hidden rounded-lg border bg-gray-50">
+                <div className="bg-secondary-100 relative aspect-square w-full overflow-hidden rounded-lg border">
                   <Image
                     src={organization.logo}
                     alt="شعار المنظمة"

@@ -139,7 +139,7 @@ export default function PartnersManagement({
                 <TableRow key={org.id}>
                   <TableCell>
                     {org.logo ? (
-                      <div className="relative h-12 w-12 overflow-hidden rounded-md">
+                      <div className="bg-secondary-100 relative h-12 w-12 overflow-hidden rounded-md">
                         <Image
                           src={org.logo}
                           alt={org.name}

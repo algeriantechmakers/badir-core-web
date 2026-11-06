@@ -11,7 +11,7 @@ export default function OrganizationCard({
 }) {
   return (
     <div className="bg-neutrals-100 hover:border-primary-300 flex flex-col items-start gap-3 rounded-lg border p-4 shadow transition-colors sm:flex-row sm:items-center">
-      <div className="bg-neutrals-100 relative mx-auto h-14 w-14 shrink-0 overflow-hidden rounded-full border sm:mx-0 sm:h-16 sm:w-16">
+      <div className="bg-secondary-100 relative mx-auto h-14 w-14 shrink-0 overflow-hidden rounded-full border sm:mx-0 sm:h-16 sm:w-16">
         {org.logo ? (
           <Image
             src={org.logo}

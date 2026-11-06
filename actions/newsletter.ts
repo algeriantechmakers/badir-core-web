@@ -210,14 +210,38 @@ export async function getNewsletterStatus(): Promise<{
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
+        email: true,
         newsletterSubscribed: true,
         newsletterSubscribedAt: true,
       },
     });
 
+    if (!user) {
+      return { subscribed: false, subscribedAt: null };
+    }
+
+    const anonymousRecord = await prisma.newsletterSubscriber.findUnique({
+      where: { email: user.email },
+    });
+
+    if (anonymousRecord && !user.newsletterSubscribed) {
+      await prisma.user.update({
+        where: { id: session.user.id },
+        data: {
+          newsletterSubscribed: true,
+          newsletterSubscribedAt: anonymousRecord.createdAt,
+        },
+      });
+
+      return {
+        subscribed: true,
+        subscribedAt: anonymousRecord.createdAt,
+      };
+    }
+
     return {
-      subscribed: user?.newsletterSubscribed ?? false,
-      subscribedAt: user?.newsletterSubscribedAt ?? null,
+      subscribed: user.newsletterSubscribed,
+      subscribedAt: user.newsletterSubscribedAt,
     };
   } catch (error) {
     console.error("Failed to get newsletter status:", error);

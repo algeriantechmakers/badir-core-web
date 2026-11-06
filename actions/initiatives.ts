@@ -16,9 +16,16 @@ import { InitiativeService } from "@/services/initiatives";
 import { getPublicStorageUrl } from "./helpers-sf";
 import { sanitizePlainText, sanitizeRichText } from "@/lib/santitize-server";
 
+type CreateInitiativeActionResult = ActionResponse<
+  NewInitiativeFormData,
+  { initiativeId?: string }
+> & {
+  coverImageFailed?: boolean;
+};
+
 export async function createInitiativeAction(
   data: NewInitiativeFormData,
-): Promise<ActionResponse<NewInitiativeFormData, { initiativeId?: string }>> {
+): Promise<CreateInitiativeActionResult> {
   try {
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -89,6 +96,7 @@ export async function createInitiativeAction(
     });
 
     let coverImagePath: string | null = null;
+    let coverImageFailed = false;
 
     if (
       data.coverImage &&
@@ -120,10 +128,7 @@ export async function createInitiativeAction(
         coverImagePath = await getPublicStorageUrl("post-images", result.path);
       } catch (error) {
         console.error("Error uploading cover image:", error);
-        return {
-          success: false,
-          error: "فشل تحميل صورة الغلاف",
-        };
+        coverImageFailed = true;
       }
     }
 
@@ -143,6 +148,7 @@ export async function createInitiativeAction(
           ? "تم نشر المبادرة بنجاح"
           : "تم حفظ المبادرة كمسودة",
       data: { initiativeId: initiative.id },
+      ...(coverImageFailed ? { coverImageFailed: true } : {}),
     };
   } catch (error) {
     console.error("Error creating initiative:", error);

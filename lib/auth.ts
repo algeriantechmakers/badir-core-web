@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/db";
 import { nextCookies } from "better-auth/next-js";
 import PasswordResetEmail from "@/emails/PasswordResetEmail";
+import EmailVerificationEmail from "@/emails/EmailVerificationEmail";
 import { sendMail } from "@/lib/email";
 import emailConfig from "@/lib/email";
 import { render } from "react-email";
@@ -79,6 +80,32 @@ export const auth = betterAuth({
 
       // Defer the send so the response is not blocked on the mail provider.
       await runAfterResponse(sendEmail());
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      expiresIn: 90 * 60, // 90 minutes
+      sendVerificationEmail: async ({
+        user,
+        url,
+      }: {
+        user: { email: string; name?: string | null };
+        url: string;
+      }) => {
+        const emailHtml = await render(
+          EmailVerificationEmail({
+            verificationLink: url,
+            userName: user.name || user.email.split("@")[0],
+          }),
+        );
+
+        await sendMail({
+          from: emailConfig.fromEmail,
+          to: user.email,
+          subject: "تحقق من بريدك الإلكتروني - منصة بادر",
+          html: emailHtml,
+        });
+      },
     },
   },
   secret: process.env.BETTER_AUTH_SECRET as string,

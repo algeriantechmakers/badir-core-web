@@ -57,6 +57,7 @@ const forMiddleware = {
     "/faq",
     "/how-it-works",
     "/assistance",
+    "/verify-email",
   ],
   authRoutes: ["/signup", "/login", "/forgot-password", "/reset-password"],
   api: {

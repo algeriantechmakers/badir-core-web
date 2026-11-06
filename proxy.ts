@@ -8,6 +8,10 @@ export default async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   const sessionCookie = getSessionCookie(request);
+  const isVerificationRoute =
+    pathname === "/verify-email" || pathname === "/api/auth/verify-email";
+
+  if (isVerificationRoute) return NextResponse.next();
 
   const isExactPublicRoute = forMiddleware.publicRoutes.includes(pathname);
   // /organizations/:id is public

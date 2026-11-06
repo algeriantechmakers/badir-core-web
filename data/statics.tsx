@@ -135,7 +135,7 @@ const targetAudienceOptions = [
 ];
 
 const participationRoleOptions = [
-  { value: ParticipantRole.manager, label: "منظم" },
+  { value: ParticipantRole.manager, label: "مُنظِّم" },
   { value: ParticipantRole.helper, label: "مساعد" },
   { value: ParticipantRole.participant, label: "مشارك" },
 ];

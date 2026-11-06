@@ -57,6 +57,15 @@ model User {
   @@map("users")
 }
 
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  ipAddress String?  @map("ip_address") @db.VarChar(255)
+
+  @@map("newsletter_subscribers")
+}
+
 model Organization {
   id                  String             @id @default(cuid())
   userId              String             @unique @map("user_id") @db.VarChar(255)

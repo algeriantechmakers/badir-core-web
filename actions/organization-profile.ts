@@ -299,14 +299,40 @@ export async function updateOrganizationProfileAction(
     }
 
     const organizationId = userWithOrg.organization.id;
+    const organization = userWithOrg.organization;
+    const profileData =
+      organization.status === OrganizationStatus.pending
+        ? {
+            ...data,
+            name: organization.name,
+            shortName: organization.shortName,
+            contactEmail: organization.contactEmail,
+            foundingDate: organization.foundingDate,
+            membersCount: organization.membersCount,
+            headquarters: organization.headquarters,
+            city: organization.city,
+            state: organization.state,
+            country: organization.country,
+            organizationType: organization.organizationType,
+            workAreas: organization.workAreas,
+            previousInitiatives: organization.previousInitiatives,
+            userRole: organization.userRole,
+            isLicensed: Boolean(organization.officialLicense),
+            officialLicense: organization.officialLicense,
+            identificationCard: organization.identificationCard,
+          }
+        : data;
     const uploadResults: Record<string, string | null> = {};
 
     // Handle file uploads (logo, ID card). Do I need to add ID card here?
-    const fileFields = ["logo", "identificationCard"];
+    const fileFields =
+      organization.status === OrganizationStatus.pending
+        ? ["logo"]
+        : ["logo", "identificationCard"];
     // const fileFields = ["logo"];
 
     for (const field of fileFields) {
-      const fileValue = data[field as keyof typeof data];
+      const fileValue = profileData[field as keyof typeof profileData];
       if (
         typeof fileValue === "string" &&
         fileValue.length > 0 &&
@@ -368,32 +394,36 @@ export async function updateOrganizationProfileAction(
 
     // Format phone number if provided
     const formattedPhone =
-      data.contactPhone && data.contactPhoneCountryCode
-        ? `+${getCallingCodeFromCountry(data.contactPhoneCountryCode)} ${
-            data.contactPhone
+      profileData.contactPhone && profileData.contactPhoneCountryCode
+        ? `+${getCallingCodeFromCountry(profileData.contactPhoneCountryCode)} ${
+            profileData.contactPhone
           }`
-        : data.contactPhone;
+        : profileData.contactPhone;
 
     await prisma.organization.update({
       where: { id: organizationId },
       data: {
-        name: data.name,
-        shortName: data.shortName || "",
-        description: data.description || null,
-        contactEmail: data.contactEmail,
+        name: profileData.name,
+        shortName: profileData.shortName || "",
+        description: profileData.description || null,
+        contactEmail: profileData.contactEmail,
         contactPhone: formattedPhone || null,
-        foundingDate: data.foundingDate ? new Date(data.foundingDate) : null,
-        membersCount: data.membersCount || null,
-        headquarters: data.headquarters || null,
-        city: data.city || null,
-        state: data.state,
-        country: data.country,
-        organizationType: data.organizationType,
-        workAreas: data.workAreas,
-        previousInitiatives: data.previousInitiatives || null,
-        userRole: data.userRole || "رئيس المنظمة",
+        foundingDate: profileData.foundingDate
+          ? new Date(profileData.foundingDate)
+          : null,
+        membersCount: profileData.membersCount || null,
+        headquarters: profileData.headquarters || null,
+        city: profileData.city || null,
+        state: profileData.state,
+        country: profileData.country,
+        organizationType: profileData.organizationType,
+        workAreas: profileData.workAreas,
+        previousInitiatives: profileData.previousInitiatives || null,
+        userRole: profileData.userRole || "رئيس المنظمة",
         logo: uploadResults.logo || userWithOrg.organization.logo || undefined,
-        officialLicense: data.isLicensed ? data.officialLicense || null : null,
+        officialLicense: profileData.isLicensed
+          ? profileData.officialLicense || null
+          : null,
         // identificationCard:
         //   uploadResults.identificationCard ||
         //   userWithOrg.organization.identificationCard,

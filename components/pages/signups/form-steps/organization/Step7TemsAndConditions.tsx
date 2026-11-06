@@ -22,7 +22,6 @@ export default function Step7TemsAndConditions() {
       <TermsAcceptancePreview
         src="/docs/القانون الداخلي لمنصة بادر.pdf"
         viewerTitle="شروط الاستخدام"
-        toolbar={false}
       />
 
       <div className="flex items-start gap-3" dir="rtl">

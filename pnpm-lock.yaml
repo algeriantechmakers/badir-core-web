@@ -172,6 +172,9 @@ importers:
       react-dom:
         specifier: 19.1.1
         version: 19.1.1(react@19.1.1)
+      react-easy-crop:
+        specifier: ^6.2.4
+        version: 6.2.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react-email:
         specifier: ^6.5.0
         version: 6.5.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(supports-color@8.1.1)
@@ -4161,6 +4164,7 @@ packages:
         integrity: sha512-CUGXpnPkVdjUCbix+83sWLW9VFgQOm44MDOx/ihITJMAnOZKvL8YYIc7DR9pP/tZ8CIRvMiON/TucvygqbHO3w==,
       }
     engines: { node: ">=18.0.0" }
+    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   "@smithy/credential-provider-imds@4.5.2":
     resolution:
@@ -10175,6 +10179,12 @@ packages:
       }
     engines: { node: ">=0.10.0" }
 
+  normalize-wheel@1.0.1:
+    resolution:
+      {
+        integrity: sha512-1OnlAPZ3zgrk8B91HyRj+eVv+kS5u+Z0SCsak6Xil/kmgEia50ga7zfkumayonZrImffAxPU/5WcyGhzetHNPA==,
+      }
+
   nth-check@2.1.1:
     resolution:
       {
@@ -11030,6 +11040,15 @@ packages:
       }
     peerDependencies:
       react: ^19.1.1
+
+  react-easy-crop@6.2.4:
+    resolution:
+      {
+        integrity: sha512-OWdnFYctzUNlekjob+bQfloG9wyhIBkkmeISnM5XVE4Byqn0jmVxDF7oz85ovUF+EIPQyj0yAHbBEFtnxwGv4g==,
+      }
+    peerDependencies:
+      react: ">=16.4.0"
+      react-dom: ">=16.4.0"
 
   react-email@6.5.0:
     resolution:
@@ -19430,6 +19449,8 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
+  normalize-wheel@1.0.1: {}
+
   nth-check@2.1.1:
     dependencies:
       boolbase: 1.0.0
@@ -19909,6 +19930,12 @@ snapshots:
     dependencies:
       react: 19.1.1
       scheduler: 0.26.0
+
+  react-easy-crop@6.2.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
+    dependencies:
+      normalize-wheel: 1.0.1
+      react: 19.1.1
+      react-dom: 19.1.1(react@19.1.1)
 
   react-email@6.5.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(supports-color@8.1.1):
     dependencies:
