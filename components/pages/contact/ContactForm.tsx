@@ -12,9 +12,12 @@ import {
 import AppButton from "@/components/AppButton";
 import FormInput from "@/components/form-input";
 import { Loader2 } from "lucide-react";
-import emailConfig from "@/lib/email-config";
 
-export default function ContactForm() {
+interface ContactFormProps {
+  contactEmail: string;
+}
+
+export default function ContactForm({ contactEmail }: ContactFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const {
     control,
@@ -42,7 +45,7 @@ export default function ContactForm() {
         },
         body: JSON.stringify({
           type: "contact",
-          to: emailConfig.contactEmail,
+          to: contactEmail,
           data: {
             fullName: data.fullName,
             email: data.email,
@@ -56,9 +59,20 @@ export default function ContactForm() {
         }),
       });
 
-      const result = await response.json();
+      const text = await response.text();
 
-      if (response.ok && result.success) {
+      if (!response.ok) {
+        console.error("Error response:", text);
+        throw new Error(text || "Failed to send email");
+      }
+
+      if (!text) {
+        throw new Error("Empty response from server");
+      }
+
+      const result = JSON.parse(text);
+
+      if (result.success) {
         toast.success("تم إرسال رسالتك بنجاح! سنتواصل معك قريباً");
         reset();
       } else {
@@ -212,10 +226,10 @@ export default function ContactForm() {
               أو من خلال
             </span>
             <a
-              href={`mailto:${emailConfig.contactEmail}`}
+              href={`mailto:${contactEmail}`}
               className="text-primary-500 text-paragraph-md hover:text-primary-600 font-medium underline decoration-2 underline-offset-4 transition-colors"
             >
-              {emailConfig.contactEmail}
+              {contactEmail}
             </a>
           </div>
         </form>
