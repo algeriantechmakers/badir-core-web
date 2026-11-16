@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/algeriantechmakers/badir-core-web/compare/1.8.0...1.8.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* contact us page hydration mismatch and 307 redirect to login ([aebca97](https://github.com/algeriantechmakers/badir-core-web/commit/aebca9719d4317d8fe564f86bee1e16d6bcb059c))
+
 # [1.8.0](https://github.com/algeriantechmakers/badir-core-web/compare/1.7.2...1.8.0) (2026-11-06)
 
 
